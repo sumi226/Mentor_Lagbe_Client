@@ -4,17 +4,23 @@ import { cn } from "@/lib/utils";
 
 /**
  * Split-screen shell for the auth pages: brand panel on the left,
- * form on the right. Both /sign-in and /sign-up use this shell.
+ * form on the right. Each page passes its own visual —
+ * /sign-in uses public/image/sign_in.jpg, /sign-up uses
+ * public/image/sign_up.jpg.
  */
 export function AuthShell({
   title,
   subtitle,
+  imageSrc,
+  imageAlt,
   children,
   footer,
   className,
 }: {
   title: string;
   subtitle: string;
+  imageSrc: string;
+  imageAlt: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
   className?: string;
@@ -24,8 +30,8 @@ export function AuthShell({
       {/* Brand panel */}
       <div className="relative hidden overflow-hidden lg:block">
         <Image
-          src="/image/hero.jpg"
-          alt="Students learning with a mentor"
+          src={imageSrc}
+          alt={imageAlt}
           fill
           priority
           className="object-cover"

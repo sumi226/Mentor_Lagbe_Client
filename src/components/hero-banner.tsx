@@ -20,25 +20,30 @@ const TRUST_POINTS = [
 /**
  * Home hero banner: headline, search bar that submits to Browse Tuitions
  * (/tuitions?search=...), a secondary CTA, and the hero visual
- * (public/image/hero.jpg). Sits on a dark navy gradient so the brand
- * orange accents and white copy pop.
+ * (public/image/hero.jpg). Sits on the brand orange (theme --primary)
+ * with a soft dark scrim so white copy stays readable.
  */
 export function HeroBanner() {
   return (
     <section
       aria-labelledby="hero-heading"
-      className="relative overflow-hidden bg-gradient-to-b from-[#132c52] via-[#0f2444] to-[#0a1933]"
+      className="relative overflow-hidden bg-primary"
     >
+      {/* Dark scrim keeps white copy readable over the brand orange */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/15 via-black/30 to-black/50"
+      />
       {/* Soft brand glow behind the content */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -top-40 -right-24 size-[28rem] rounded-full bg-primary/20 blur-3xl"
+        className="pointer-events-none absolute -top-40 -right-24 size-[28rem] rounded-full bg-white/20 blur-3xl"
       />
 
       <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:py-24">
         {/* ---------- Copy + search ---------- */}
         <div className="flex max-w-xl flex-col items-start gap-6">
-          <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/15 px-3.5 py-1.5 text-xs font-medium tracking-wide text-primary">
+          <span className="inline-flex items-center rounded-full border border-white/25 bg-black/30 px-3.5 py-1.5 text-xs font-medium tracking-wide text-white">
             Tuition &amp; 1-on-1 mentorship — in one place
           </span>
 
@@ -47,13 +52,13 @@ export function HeroBanner() {
             className="text-4xl font-bold tracking-tight text-balance text-white sm:text-5xl lg:text-6xl"
           >
             Find Your Ideal{" "}
-            <span className="box-decoration-clone rounded-lg bg-primary/20 px-2 py-0.5">
+            <span className="box-decoration-clone rounded-lg bg-black/25 px-2 py-0.5">
               Tutor or Mentorship Batch
             </span>{" "}
             Today
           </h1>
 
-          <p className="max-w-lg text-pretty text-base text-slate-300 sm:text-lg">
+          <p className="max-w-lg text-pretty text-base text-white/90 sm:text-lg">
             Search approved tuition posts by subject, class, and budget — or
             book a mentor who fits your goals. Online or offline, it starts
             here.
@@ -74,7 +79,7 @@ export function HeroBanner() {
               />
               <Button
                 type="submit"
-                className="h-12 shrink-0 rounded-xl px-6 shadow-lg shadow-primary/25"
+                className="h-12 shrink-0 rounded-xl px-6 shadow-lg shadow-black/25"
               >
                 <Search />
                 Search
@@ -91,7 +96,7 @@ export function HeroBanner() {
             <ArrowRight />
           </Button>
 
-          <ul className="flex flex-wrap gap-x-6 gap-y-3 pt-1 text-sm text-slate-300">
+          <ul className="flex flex-wrap gap-x-6 gap-y-3 pt-1 text-sm text-white/85">
             {TRUST_POINTS.map(({ icon: Icon, label }) => (
               <li key={label} className="flex items-center gap-2">
                 <Icon
@@ -109,7 +114,7 @@ export function HeroBanner() {
           {/* Offset frame adds depth behind the image card */}
           <div
             aria-hidden="true"
-            className="absolute inset-0 hidden translate-x-4 translate-y-4 rounded-3xl border-2 border-primary/40 lg:block"
+            className="absolute inset-0 hidden translate-x-4 translate-y-4 rounded-3xl border-2 border-white/40 lg:block"
           />
 
           <div className="relative aspect-[4/3] overflow-hidden rounded-3xl border border-white/10 shadow-2xl shadow-black/40 ring-1 ring-white/10 lg:aspect-[5/4]">

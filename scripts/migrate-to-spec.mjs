@@ -7,7 +7,7 @@
  *    verification → verifications). Rename keeps all documents intact, so
  *    existing logins/sessions keep working.
  * 2. Backfills the new spec fields on documents created before this change:
- *    - users:            plan ("free"), phone (""), bio ("")
+ *    - users:            plan ("free"), phone (""), bio (""), image (null)
  *    - applications:     studentPhone (from legacy "phone"), tutorEmail
  *                        (from the tuition post), preferredSchedule ("")
  *    - payments:         userName, transactionId (from stripeSessionId),
@@ -73,8 +73,12 @@ try {
       { $or: [{ phone: { $exists: false } }, { bio: { $exists: false } }] },
       { $set: { phone: "", bio: "" } }
     );
+    const image = await users.updateMany(
+      { image: { $exists: false } },
+      { $set: { image: null } }
+    );
     console.log(
-      `users: plan defaulted on ${plan.modifiedCount}, phone/bio defaulted on ${contact.modifiedCount}`
+      `users: plan defaulted on ${plan.modifiedCount}, phone/bio defaulted on ${contact.modifiedCount}, image defaulted on ${image.modifiedCount}`
     );
   }
 

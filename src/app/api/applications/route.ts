@@ -99,3 +99,137 @@ export async function POST(req: Request) {
     );
   }
 }
+
+/**
+ * Student: cancels their own application while it is still pending.
+ * Accepted/rejected applications are final and cannot be removed.
+ */
+export async function DELETE(req: Request) {
+  try {
+    const session = await auth.api.getSession({ headers: req.headers });
+    const user = session?.user;
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "unauthorized", message: "Please sign in first." },
+        { status: 401 }
+      );
+    }
+    if (user.role !== "student") {
+      return NextResponse.json(
+        { error: "forbidden", message: "Only students can cancel applications." },
+        { status: 403 }
+      );
+    }
+
+    const body = await req.json().catch(() => ({} as Record<string, unknown>));
+    const id = String(body.id ?? "");
+    if (!ObjectId.isValid(id)) {
+      return NextResponse.json(
+        { error: "invalid-id", message: "Invalid application." },
+        { status: 400 }
+      );
+    }
+
+    await client.connect();
+    const applications = db.collection("applications");
+    const application = await applications.findOne({ _id: new ObjectId(id) });
+
+    if (!application || String(application.studentId) !== String(user.id)) {
+      return NextResponse.json(
+        { error: "not-found", message: "Application not found." },
+        { status: 404 }
+      );
+    }
+    if (String(application.status) !== "pending") {
+      return NextResponse.json(
+        {
+          error: "not-cancellable",
+          message: "Only pending applications can be cancelled.",
+        },
+        { status: 409 }
+      );
+    }
+
+    await applications.deleteOne({ _id: new ObjectId(id) });
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("[applications] failed to cancel:", error);
+    return NextResponse.json(
+      { error: "server-error", message: "Could not cancel the application." },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * Tutor: accepts or rejects a student application for one of their own
+ * tuition posts. Ownership is verified against the tuition's tutorEmail.
+ */
+export async function PATCH(req: Request) {
+  try {
+    const session = await auth.api.getSession({ headers: req.headers });
+    const user = session?.user;
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "unauthorized", message: "Please sign in first." },
+        { status: 401 }
+      );
+    }
+    if (user.role !== "tutor") {
+      return NextResponse.json(
+        { error: "forbidden", message: "Only tutors can review applications." },
+        { status: 403 }
+      );
+    }
+
+    const body = await req.json().catch(() => ({} as Record<string, unknown>));
+    const id = String(body.id ?? "");
+    const action = body.action === "reject" ? "reject" : "accept";
+
+    if (!ObjectId.isValid(id)) {
+      return NextResponse.json(
+        { error: "invalid-id", message: "Invalid application." },
+        { status: 400 }
+      );
+    }
+
+    await client.connect();
+    const application = await db
+      .collection("applications")
+      .findOne({ _id: new ObjectId(id) });
+    if (!application) {
+      return NextResponse.json(
+        { error: "not-found", message: "Application not found." },
+        { status: 404 }
+      );
+    }
+
+    const tuitionId = String(application.tuitionId ?? "");
+    const tuition = ObjectId.isValid(tuitionId)
+      ? await db
+          .collection("tuitions")
+          .findOne({ _id: new ObjectId(tuitionId) })
+      : null;
+    if (!tuition || String(tuition.tutorEmail) !== String(user.email)) {
+      return NextResponse.json(
+        { error: "forbidden", message: "This application belongs to another tutor." },
+        { status: 403 }
+      );
+    }
+
+    const status = action === "accept" ? "accepted" : "rejected";
+    await db
+      .collection("applications")
+      .updateOne({ _id: new ObjectId(id) }, { $set: { status } });
+
+    return NextResponse.json({ ok: true, action, status });
+  } catch (error) {
+    console.error("[applications] failed to review:", error);
+    return NextResponse.json(
+      { error: "server-error", message: "Could not update the application." },
+      { status: 500 }
+    );
+  }
+}

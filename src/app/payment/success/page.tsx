@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CheckCircle2, ArrowRight, CreditCard, LayoutDashboard } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { PaymentVerifier } from "@/components/payment-verifier";
 
 export const metadata = { title: "Payment Success" };
 
@@ -22,6 +23,8 @@ export default function PaymentSuccessPage() {
           Your MentorLagbe Pro subscription has been confirmed. Your Pro
           benefits are now active on your account.
         </p>
+
+        <PaymentVerifier />
 
         <div className="mt-6 flex flex-col gap-2">
           <Button render={<Link href="/dashboard" />}>

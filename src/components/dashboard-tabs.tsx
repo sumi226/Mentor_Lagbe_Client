@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, UserRound } from "lucide-react";
+import {
+  ClipboardList,
+  CreditCard,
+  LayoutDashboard,
+  UserRound,
+  Users,
+} from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -11,13 +17,20 @@ const TABS = [
   { match: (p: string) => p.startsWith("/dashboard/profile"), href: "/dashboard/profile", label: "Profile", icon: UserRound },
 ] as const;
 
+const ADMIN_TABS = [
+  { match: (p: string) => p.startsWith("/dashboard/admin/users"), href: "/dashboard/admin/users", label: "Users", icon: Users },
+  { match: (p: string) => p.startsWith("/dashboard/admin/tuitions"), href: "/dashboard/admin/tuitions", label: "Tuitions", icon: ClipboardList },
+  { match: (p: string) => p.startsWith("/dashboard/admin/transactions"), href: "/dashboard/admin/transactions", label: "Transactions", icon: CreditCard },
+] as const;
+
 /** Sub-navigation shared by all dashboard pages (client-side active state). */
 export function DashboardTabs({ role }: { role: string }) {
   const pathname = usePathname();
+  const tabs = role === "admin" ? [...TABS, ...ADMIN_TABS] : TABS;
 
   return (
-    <nav aria-label="Dashboard" className="mt-5 flex gap-1">
-      {TABS.map((tab) => {
+    <nav aria-label="Dashboard" className="mt-5 flex flex-wrap gap-1">
+      {tabs.map((tab) => {
         const Icon = tab.icon;
         const active = tab.match(pathname);
         const href = tab.label === "Overview" ? `/dashboard/${role}` : tab.href;

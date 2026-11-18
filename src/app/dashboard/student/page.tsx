@@ -1,10 +1,17 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
-import { ArrowRight, FileText, Send, UserRound } from "lucide-react";
+import {
+  ArrowRight,
+  CheckCircle2,
+  Crown,
+  Send,
+  Clock,
+} from "lucide-react";
 
 import { getSessionUser } from "@/lib/session";
 import { client, db } from "@/lib/mongodb";
+import { ApplicationCancelButton } from "@/components/application-cancel-button";
 import { Button } from "@/components/ui/button";
 import {
   DashboardSection,
@@ -21,12 +28,15 @@ export default async function StudentDashboardPage() {
   if (user.role !== "student") redirect("/dashboard");
 
   await client.connect();
-  const raw = await db
-    .collection("applications")
-    .find({ studentId: user.id })
-    .sort({ createdAt: -1 })
-    .limit(25)
-    .toArray();
+  const [raw, planDoc] = await Promise.all([
+    db
+      .collection("applications")
+      .find({ studentId: user.id })
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .toArray(),
+    db.collection("user").findOne({ email: user.email }),
+  ]);
 
   const applications = raw.map((doc) => ({
     id: String(doc._id),
@@ -38,10 +48,12 @@ export default async function StudentDashboardPage() {
     createdAt: doc.createdAt instanceof Date ? doc.createdAt : new Date(),
   }));
 
+  const plan = String(planDoc?.plan ?? "free") === "pro" ? "Pro" : "Free";
+
   const stats = {
     total: applications.length,
+    accepted: applications.filter((a) => a.status === "accepted").length,
     pending: applications.filter((a) => a.status === "pending").length,
-    tutors: new Set(applications.map((a) => a.tutorName)).size,
   };
 
   return (
@@ -59,22 +71,32 @@ export default async function StudentDashboardPage() {
         </Button>
       </div>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           icon={Send}
-          label="Applications Sent"
+          label="Total Applied Tuitions"
           value={stats.total}
         />
         <StatCard
-          icon={FileText}
-          label="Awaiting Response"
-          value={stats.pending}
-          hint="Tutors typically reply within 24–48h"
+          icon={CheckCircle2}
+          label="Accepted Applications"
+          value={stats.accepted}
         />
         <StatCard
-          icon={UserRound}
-          label="Tutors Contacted"
-          value={stats.tutors}
+          icon={Clock}
+          label="Pending Applications"
+          value={stats.pending}
+          hint="Awaiting tutor response"
+        />
+        <StatCard
+          icon={Crown}
+          label="Your Plan"
+          value={plan}
+          hint={
+            plan === "Free"
+              ? "Upgrade for unlimited applications"
+              : "Unlimited applications unlocked"
+          }
         />
       </div>
 
@@ -112,6 +134,9 @@ export default async function StudentDashboardPage() {
                   >
                     View
                   </Link>
+                  {app.status === "pending" ? (
+                    <ApplicationCancelButton id={app.id} />
+                  ) : null}
                 </div>
               </li>
             ))}

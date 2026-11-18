@@ -50,6 +50,30 @@ export async function POST(req: Request) {
     }
 
     await client.connect();
+
+    // Plan rule: a Free tutor may have at most 2 tuition posts (pending and
+    // approved both count against the quota); rejected ones don't.
+    const planDoc = await db
+      .collection("user")
+      .findOne({ email: String(user.email ?? "") });
+    const plan = String(planDoc?.plan ?? "free");
+    if (plan !== "pro") {
+      const used = await db.collection("tuitions").countDocuments({
+        tutorEmail: String(user.email ?? ""),
+        approvalStatus: { $ne: "rejected" },
+      });
+      if (used >= 2) {
+        return NextResponse.json(
+          {
+            error: "post-limit",
+            message:
+              "Free tutors can post up to 2 tuitions. Upgrade to Pro Tutor for unlimited posts.",
+          },
+          { status: 403 }
+        );
+      }
+    }
+
     const result = await db.collection("tuitions").insertOne({
       title,
       subject,

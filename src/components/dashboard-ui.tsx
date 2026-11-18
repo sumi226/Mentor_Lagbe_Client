@@ -29,8 +29,12 @@ export function StatCard({
 const STATUS_STYLES: Record<string, string> = {
   approved: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
   active: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+  accepted: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+  paid: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
   pending: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
   rejected: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
+  failed: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
+  refunded: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
   inactive: "bg-muted text-muted-foreground",
 };
 

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
 import { auth } from "@/lib/auth";
+import { client, db } from "@/lib/mongodb";
 import { FREE_FEATURES, PRO_PLANS, type PlanKey } from "@/lib/plans";
 
 /**
@@ -66,13 +67,32 @@ export async function POST(req: Request) {
               },
             },
           ],
-      success_url: `${origin}/payment/success`,
+      success_url: `${origin}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/payment/cancel`,
       metadata: {
         plan: planKey,
         features: FREE_FEATURES[planKey].length + plan.features.length,
       },
     });
+
+    // Record the transaction for the admin dashboard. It starts as "pending"
+    // and is marked "paid" by /api/checkout/verify once Stripe confirms it.
+    try {
+      await client.connect();
+      await db.collection("payments").insertOne({
+        userId: String(session.user.id ?? ""),
+        userEmail: String(session.user.email ?? ""),
+        plan: planKey,
+        planName: plan.name,
+        amount: plan.amount,
+        currency: plan.currency,
+        status: "pending",
+        stripeSessionId: checkout.id,
+        createdAt: new Date(),
+      });
+    } catch (recordError) {
+      console.error("[checkout] failed to record payment:", recordError);
+    }
 
     return NextResponse.json({ url: checkout.url });
   } catch (error) {

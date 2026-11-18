@@ -34,11 +34,21 @@ export async function POST(req: Request) {
     const tuitionId = String(body.tuitionId ?? "");
     const name = String(body.name ?? user.name ?? "").trim();
     const phone = String(body.phone ?? "").trim().slice(0, 30);
+    const schedule = String(body.preferredSchedule ?? "").trim().slice(0, 120);
     const message = String(body.message ?? "").trim();
 
     if (!ObjectId.isValid(tuitionId)) {
       return NextResponse.json(
         { error: "invalid-tuition", message: "Invalid tuition listing." },
+        { status: 400 }
+      );
+    }
+    if (!schedule) {
+      return NextResponse.json(
+        {
+          error: "invalid-schedule",
+          message: "Please tell the tutor your preferred schedule.",
+        },
         { status: 400 }
       );
     }
@@ -81,10 +91,12 @@ export async function POST(req: Request) {
       tuitionId,
       tuitionTitle: String(tuition.title ?? ""),
       tutorName: String(tuition.tutorName ?? ""),
+      tutorEmail: String(tuition.tutorEmail ?? ""),
       studentId: user.id,
       studentName: name || String(user.name ?? ""),
       studentEmail: String(user.email ?? ""),
-      phone,
+      studentPhone: phone,
+      preferredSchedule: schedule,
       message,
       status: "pending",
       createdAt: new Date(),

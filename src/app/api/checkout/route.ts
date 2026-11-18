@@ -82,12 +82,15 @@ export async function POST(req: Request) {
       await db.collection("payments").insertOne({
         userId: String(session.user.id ?? ""),
         userEmail: String(session.user.email ?? ""),
+        userName: String(session.user.name ?? ""),
         plan: planKey,
         planName: plan.name,
         amount: plan.amount,
         currency: plan.currency,
         status: "pending",
+        transactionId: checkout.id,
         stripeSessionId: checkout.id,
+        paymentDate: null, // set to the real date once Stripe confirms it
         createdAt: new Date(),
       });
     } catch (recordError) {

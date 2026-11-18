@@ -9,12 +9,15 @@ import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 type Initial = {
   name: string;
   email: string;
   image: string;
   role: string;
+  phone: string;
+  bio: string;
 };
 
 function getInitials(name?: string | null) {
@@ -33,6 +36,8 @@ export function ProfileForm({ initial }: { initial: Initial }) {
   const router = useRouter();
   const [name, setName] = useState(initial.name);
   const [image, setImage] = useState(initial.image);
+  const [phone, setPhone] = useState(initial.phone);
+  const [bio, setBio] = useState(initial.bio);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{
     type: "success" | "error";
@@ -47,6 +52,8 @@ export function ProfileForm({ initial }: { initial: Initial }) {
       const { error } = await authClient.updateUser({
         name: name.trim(),
         image: image.trim() || undefined,
+        phone: phone.trim(),
+        bio: bio.trim(),
       });
       if (error) {
         setMessage({
@@ -129,6 +136,31 @@ export function ProfileForm({ initial }: { initial: Initial }) {
           <p className="text-xs text-muted-foreground">
             Paste a direct image link, or leave it empty to use your initials.
           </p>
+        </div>
+
+        <div className="grid gap-1.5">
+          <Label htmlFor="profile-phone">Phone</Label>
+          <Input
+            id="profile-phone"
+            type="tel"
+            value={phone}
+            onChange={(event) => setPhone(event.target.value)}
+            placeholder="01XXXXXXXXX"
+            autoComplete="tel"
+          />
+        </div>
+
+        <div className="grid gap-1.5">
+          <Label htmlFor="profile-bio">Bio</Label>
+          <Textarea
+            id="profile-bio"
+            value={bio}
+            onChange={(event) => setBio(event.target.value)}
+            rows={4}
+            maxLength={500}
+            placeholder="A short introduction — subjects you teach or want to learn, curriculum, availability…"
+          />
+          <p className="text-xs text-muted-foreground">{bio.length}/500 characters</p>
         </div>
       </div>
 

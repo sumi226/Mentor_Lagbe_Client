@@ -45,12 +45,20 @@ export default async function AdminTransactionsPage() {
   const payments = docs.map((doc) => ({
     id: String(doc._id),
     userEmail: String(doc.userEmail ?? ""),
+    userName: String(doc.userName ?? ""),
+    transactionId: String(doc.transactionId ?? doc.stripeSessionId ?? ""),
     planName: String(doc.planName ?? doc.plan ?? "Pro"),
     amount: Number(doc.amount ?? 0),
     currency: String(doc.currency ?? "usd"),
     status: String(doc.status ?? "pending"),
-    createdAt:
-      doc.createdAt instanceof Date ? doc.createdAt : new Date(),
+    // Payment Date: set by /api/checkout/verify once Stripe confirms;
+    // fall back to the record date while a payment is still pending.
+    paymentDate:
+      doc.paymentDate instanceof Date
+        ? doc.paymentDate
+        : doc.createdAt instanceof Date
+          ? doc.createdAt
+          : new Date(),
   }));
 
   const revenueCents = Number(paidAgg[0]?.total ?? 0);
@@ -97,10 +105,13 @@ export default async function AdminTransactionsPage() {
                 className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm"
               >
                 <div className="min-w-0">
-                  <p className="truncate font-semibold">{payment.planName}</p>
+                  <p className="truncate font-semibold" title={payment.transactionId || undefined}>
+                    {payment.planName}
+                  </p>
                   <p className="mt-0.5 truncate text-sm text-muted-foreground">
+                    {payment.userName ? `${payment.userName} · ` : ""}
                     {payment.userEmail} ·{" "}
-                    {format(payment.createdAt, "dd MMM yyyy, HH:mm")}
+                    {format(payment.paymentDate, "dd MMM yyyy, HH:mm")}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">

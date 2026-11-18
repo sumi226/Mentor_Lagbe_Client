@@ -54,7 +54,7 @@ export async function POST(req: Request) {
     // Plan rule: a Free tutor may have at most 2 tuition posts (pending and
     // approved both count against the quota); rejected ones don't.
     const planDoc = await db
-      .collection("user")
+      .collection("users")
       .findOne({ email: String(user.email ?? "") });
     const plan = String(planDoc?.plan ?? "free");
     if (plan !== "pro") {

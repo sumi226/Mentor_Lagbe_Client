@@ -52,7 +52,7 @@ export async function POST(req: Request) {
 
     await client.connect();
     const result = await db
-      .collection("user")
+      .collection("users")
       .updateOne(
         { _id: new ObjectId(id) },
         { $set: { role, updatedAt: new Date() } }

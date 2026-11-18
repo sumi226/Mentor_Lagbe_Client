@@ -35,7 +35,7 @@ export default async function StudentDashboardPage() {
       .sort({ createdAt: -1 })
       .limit(50)
       .toArray(),
-    db.collection("user").findOne({ email: user.email }),
+    db.collection("users").findOne({ email: user.email }),
   ]);
 
   const applications = raw.map((doc) => ({

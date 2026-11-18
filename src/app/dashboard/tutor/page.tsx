@@ -8,7 +8,6 @@ import { client, db } from "@/lib/mongodb";
 import { ApplicationReview } from "@/components/application-review";
 import { PostTuitionButton } from "@/components/post-tuition-button";
 import { TuitionActions } from "@/components/tuition-actions";
-import { Button } from "@/components/ui/button";
 import {
   DashboardSection,
   EmptyState,
@@ -34,7 +33,7 @@ export default async function TutorDashboardPage() {
       .sort({ createdAt: -1 })
       .limit(25)
       .toArray(),
-    db.collection("user").findOne({ email: user.email }),
+    db.collection("users").findOne({ email: user.email }),
   ]);
 
   const applicantDocs = await db
@@ -67,6 +66,8 @@ export default async function TutorDashboardPage() {
     tuitionTitle: String(doc.tuitionTitle ?? ""),
     studentName: String(doc.studentName ?? ""),
     studentEmail: String(doc.studentEmail ?? ""),
+    studentPhone: String(doc.studentPhone ?? doc.phone ?? ""),
+    preferredSchedule: String(doc.preferredSchedule ?? ""),
     message: String(doc.message ?? ""),
     status: String(doc.status ?? "pending"),
     createdAt: doc.createdAt instanceof Date ? doc.createdAt : new Date(),
@@ -228,6 +229,27 @@ export default async function TutorDashboardPage() {
                 <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
                   {app.message}
                 </p>
+                {(app.preferredSchedule || app.studentPhone) && (
+                  <p className="mt-1.5 text-xs text-muted-foreground">
+                    {app.preferredSchedule ? (
+                      <>
+                        Schedule:{" "}
+                        <span className="font-medium text-foreground">
+                          {app.preferredSchedule}
+                        </span>
+                      </>
+                    ) : null}
+                    {app.preferredSchedule && app.studentPhone ? " · " : null}
+                    {app.studentPhone ? (
+                      <>
+                        Phone:{" "}
+                        <span className="font-medium text-foreground">
+                          {app.studentPhone}
+                        </span>
+                      </>
+                    ) : null}
+                  </p>
+                )}
                 <p className="mt-2 text-xs text-muted-foreground">
                   {formatDistanceToNow(app.createdAt, { addSuffix: true })}
                 </p>

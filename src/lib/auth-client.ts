@@ -12,6 +12,9 @@ export type SessionUser = {
   email: string;
   image?: string | null;
   role?: string | null;
+  phone?: string | null;
+  bio?: string | null;
+  plan?: string | null;
 };
 
 export type UserRole = "student" | "tutor" | "admin";

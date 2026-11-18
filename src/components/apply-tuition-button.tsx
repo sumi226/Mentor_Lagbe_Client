@@ -105,6 +105,7 @@ export function ApplyTuitionButton({
           tuitionId,
           name: String(data.get("name") ?? ""),
           phone: String(data.get("phone") ?? ""),
+          preferredSchedule: String(data.get("schedule") ?? ""),
           message: String(data.get("message") ?? ""),
         }),
       });
@@ -196,6 +197,15 @@ export function ApplyTuitionButton({
                   type="tel"
                   placeholder="01XXXXXXXXX"
                   autoComplete="tel"
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="apply-schedule">Preferred Schedule</Label>
+                <Input
+                  id="apply-schedule"
+                  name="schedule"
+                  required
+                  placeholder="e.g. Sat–Tue, 5:00–7:00 PM"
                 />
               </div>
               <div className="grid gap-1.5">

@@ -60,8 +60,8 @@ export default async function AdminDashboardPage() {
     db.collection("tuitions").countDocuments(),
     db.collection("tuitions").countDocuments({ approvalStatus: "approved" }),
     db.collection("applications").countDocuments(),
-    db.collection("user").countDocuments(),
-    db.collection("user").countDocuments({ role: "tutor" }),
+    db.collection("users").countDocuments(),
+    db.collection("users").countDocuments({ role: "tutor" }),
     db
       .collection("payments")
       .aggregate([{ $match: { status: "paid" } }, { $group: { _id: null, total: { $sum: "$amount" } } }])

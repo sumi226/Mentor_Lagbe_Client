@@ -57,13 +57,19 @@ export async function POST(req: Request) {
     await client.connect();
     await db.collection("payments").updateOne(
       { stripeSessionId: sessionId },
-      { $set: { status: "paid", paidAt: new Date() } }
+      {
+        $set: {
+          status: "paid",
+          paidAt: new Date(),
+          paymentDate: new Date(),
+        },
+      }
     );
     await db
-      .collection("user")
+      .collection("users")
       .updateOne(
         { email: String(session.user.email ?? "") },
-        { $set: { plan: planKey, planUpgradedAt: new Date() } }
+        { $set: { plan: "pro", planUpgradedAt: new Date() } }
       );
 
     return NextResponse.json({ ok: true, plan: planKey });

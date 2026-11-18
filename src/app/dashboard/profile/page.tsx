@@ -13,8 +13,8 @@ export default async function ProfilePage() {
     <div>
       <h1 className="text-2xl font-bold tracking-tight">Profile</h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        Update your name and avatar — it shows up on your dashboard and in
-        every message you send.
+        Update your name, avatar, phone and bio — they show up on your
+        dashboard and in every message you send.
       </p>
       <div className="mt-6 max-w-xl">
         <ProfileForm
@@ -23,6 +23,8 @@ export default async function ProfilePage() {
             email: user.email,
             image: user.image ?? "",
             role: user.role,
+            phone: user.phone ?? "",
+            bio: user.bio ?? "",
           }}
         />
       </div>

@@ -20,7 +20,7 @@ export default async function AdminUsersPage() {
 
   await client.connect();
   const docs = await db
-    .collection("user")
+    .collection("users")
     .find({})
     .sort({ createdAt: -1 })
     .limit(100)

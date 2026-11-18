@@ -1,12 +1,7 @@
 import { betterAuth } from "better-auth";
 import { nextCookies } from "better-auth/next-js";
 import { mongodbAdapter } from "@better-auth/mongo-adapter";
-import { MongoClient } from "mongodb";
-
-const client = new MongoClient(
-  process.env.MONGODB_URI ?? process.env.MONGODB_URL ?? "mongodb://localhost:27017"
-);
-const db = client.db("mentor_lagbe");
+import { client, db } from "@/lib/mongodb";
 
 export type UserRole = "student" | "tutor" | "admin";
 

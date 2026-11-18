@@ -19,8 +19,8 @@ export function SiteLogo({ className }: { className?: string }) {
         alt="MentorLagbe"
         width={120}
         height={42}
-        priority
-        className="h-10 w-auto"
+        preload
+        className="h-10 w-auto dark:rounded-xl dark:bg-white dark:px-2.5 dark:py-1.5"
       />
     </Link>
   );

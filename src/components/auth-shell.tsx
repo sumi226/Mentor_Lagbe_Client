@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * Split-screen shell for the auth pages: brand panel on the left,
- * form on the right. Both /login and /register use this shell.
+ * form on the right. Both /sign-in and /sign-up use this shell.
  */
 export function AuthShell({
   title,

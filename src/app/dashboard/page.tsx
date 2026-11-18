@@ -1,12 +1,13 @@
-import { PlaceholderPage } from "@/components/placeholder-page";
+import { redirect } from "next/navigation";
 
-export const metadata = { title: "Dashboard" };
+import { getSessionUser } from "@/lib/session";
 
-export default function DashboardPage() {
-  return (
-    <PlaceholderPage
-      title="Dashboard"
-      description="Role-based dashboards for Students, Tutors, and Admins will live here."
-    />
-  );
+/**
+ * Role-based entry point: sends each user to their own dashboard
+ * (student → /dashboard/student, tutor → /dashboard/tutor, admin → /dashboard/admin).
+ */
+export default async function DashboardPage() {
+  const user = await getSessionUser();
+  if (!user) redirect("/sign-in");
+  redirect(`/dashboard/${user.role}`);
 }

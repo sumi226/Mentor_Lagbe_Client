@@ -1,78 +1,8 @@
 import Link from "next/link";
-import {
-  ArrowRight,
-  BookOpen,
-  MapPin,
-  Monitor,
-  School,
-  Sparkles,
-  UserRound,
-} from "lucide-react";
+import { BookOpen, Sparkles } from "lucide-react";
 
-import { getFeaturedTuitions, type FeaturedTuition } from "@/lib/tuitions";
-import { Button } from "@/components/ui/button";
-
-function ModeBadge({ mode }: { mode: FeaturedTuition["mode"] }) {
-  const isOnline = mode === "Online";
-  return (
-    <span
-      className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${
-        isOnline
-          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-          : "bg-blue-500/10 text-blue-600 dark:text-blue-400"
-      }`}
-    >
-      {isOnline ? <Monitor className="size-3.5" /> : <MapPin className="size-3.5" />}
-      {mode}
-    </span>
-  );
-}
-
-function TuitionCard({ item }: { item: FeaturedTuition }) {
-  return (
-    <div className="flex h-full flex-col rounded-2xl border border-border bg-card p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg">
-      <div className="flex items-start justify-between gap-3">
-        <span className="inline-flex rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
-          {item.subject}
-        </span>
-        <ModeBadge mode={item.mode} />
-      </div>
-
-      <h3 className="mt-3 line-clamp-2 min-h-12 text-base font-semibold leading-snug">
-        {item.title}
-      </h3>
-
-      <div className="mt-3 space-y-2.5 text-sm text-muted-foreground">
-        <div className="flex items-center gap-2">
-          <School className="size-4 shrink-0 text-primary" />
-          <span className="truncate">{item.classLevel}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <UserRound className="size-4 shrink-0 text-primary" />
-          <span className="truncate">{item.tutorName}</span>
-        </div>
-      </div>
-
-      <div className="mt-4 border-t border-border pt-4">
-        <p className="text-2xl font-bold tracking-tight text-primary">
-          ৳{item.monthlyFee.toLocaleString("en-US")}
-          <span className="text-sm font-medium text-muted-foreground">/month</span>
-        </p>
-      </div>
-
-      <div className="mt-auto pt-5">
-        <Button
-          render={<Link href="/tuitions" />}
-          variant="outline"
-          className="w-full"
-        >
-          View Details
-          <ArrowRight className="size-4" />
-        </Button>
-      </div>
-    </div>
-  );
-}
+import { getFeaturedTuitions } from "@/lib/tuitions";
+import { TuitionCard } from "@/components/tuition-card";
 
 export default async function FeaturedTuitions() {
   const tuitions = await getFeaturedTuitions(6);
@@ -103,11 +33,21 @@ export default async function FeaturedTuitions() {
             </p>
           </div>
         ) : (
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {tuitions.map((item) => (
-              <TuitionCard key={item.id} item={item} />
-            ))}
-          </div>
+          <>
+            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {tuitions.map((item) => (
+                <TuitionCard key={item.id} item={item} />
+              ))}
+            </div>
+            <div className="mt-8 text-center">
+              <Link
+                href="/tuitions"
+                className="text-sm font-semibold text-primary underline-offset-4 hover:underline"
+              >
+                Browse all tuitions →
+              </Link>
+            </div>
+          </>
         )}
       </div>
     </section>

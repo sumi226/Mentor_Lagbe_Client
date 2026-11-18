@@ -4,7 +4,7 @@ import { LoginForm } from "./login-form";
 
 export const metadata = { title: "Sign In" };
 
-export default function LoginPage() {
+export default function SignInPage() {
   return (
     <AuthShell
       title="Welcome back"
@@ -13,7 +13,7 @@ export default function LoginPage() {
         <p className="text-muted-foreground">
           Don’t have an account?{" "}
           <Link
-            href="/register"
+            href="/sign-up"
             className="font-medium text-primary hover:underline"
           >
             Sign Up

@@ -190,7 +190,7 @@ export function SiteHeader() {
                     <LayoutDashboard />
                     Dashboard
                   </DropdownMenuItem>
-                  <DropdownMenuItem render={<Link href="/update-profile" />}>
+                  <DropdownMenuItem render={<Link href="/dashboard/profile" />}>
                     <UserRoundPen />
                     Update Profile
                   </DropdownMenuItem>
@@ -205,10 +205,10 @@ export function SiteHeader() {
           ) : (
             /* Unauthenticated state: Sign In / Sign Up */
             <div className="hidden items-center gap-2 sm:flex">
-              <Button variant="ghost" render={<Link href="/login" />}>
+              <Button variant="ghost" render={<Link href="/sign-in" />}>
                 Sign In
               </Button>
-              <Button render={<Link href="/register" />}>Sign Up</Button>
+              <Button render={<Link href="/sign-up" />}>Sign Up</Button>
             </div>
           )}
 
@@ -266,7 +266,7 @@ export function SiteHeader() {
                       variant="outline"
                       render={
                         <Link
-                          href="/update-profile"
+                          href="/dashboard/profile"
                           onClick={closeMobileMenu}
                         />
                       }
@@ -283,11 +283,11 @@ export function SiteHeader() {
                   <div className="flex flex-col gap-2">
                     <Button
                       variant="outline"
-                      render={<Link href="/login" onClick={closeMobileMenu} />}
+                      render={<Link href="/sign-in" onClick={closeMobileMenu} />}
                     >
                       Sign In
                     </Button>
-                    <Button render={<Link href="/register" onClick={closeMobileMenu} />}>
+                    <Button render={<Link href="/sign-up" onClick={closeMobileMenu} />}>
                       Sign Up
                     </Button>
                   </div>

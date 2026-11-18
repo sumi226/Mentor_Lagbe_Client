@@ -11,9 +11,11 @@
     "description": "Live online classes covering algebra, geometry and creative mathematics questions. Weekly practice sheets and monthly assessments included.",
     "tutorName": "Aminul Islam",
     "tutorEmail": "aminul.math@example.com",
+    "avatarImage": "https://i.pravatar.cc/150?img=12",
     "approvalStatus": "approved",
     "isActive": true,
-    "createdAt": "2026-11-01T09:00:00.000Z"
+    "createdAt": "2026-11-01T09:00:00.000Z",
+    "tutorAvatar": "https://api.dicebear.com/9.x/notionists/png?seed=Aminul%20Islam&size=96"
   },
   {
     "title": "HSC Physics 1st Paper Online Course",
@@ -27,9 +29,11 @@
     "description": "Concept-based physics lessons with numerical problem solving, board-question practice and recorded revision sessions.",
     "tutorName": "Nusrat Jahan",
     "tutorEmail": "nusrat.physics@example.com",
+    "avatarImage": "https://i.pravatar.cc/150?img=47",
     "approvalStatus": "approved",
     "isActive": true,
-    "createdAt": "2026-11-02T09:00:00.000Z"
+    "createdAt": "2026-11-02T09:00:00.000Z",
+    "tutorAvatar": "https://api.dicebear.com/9.x/notionists/png?seed=Nusrat%20Jahan&size=96"
   },
   {
     "title": "SSC English Grammar and Writing",
@@ -43,9 +47,11 @@
     "description": "Grammar, paragraph, email, composition and exam-focused writing practice in small online groups.",
     "tutorName": "Farhan Ahmed",
     "tutorEmail": "farhan.english@example.com",
+    "avatarImage": "https://i.pravatar.cc/150?img=13",
     "approvalStatus": "approved",
     "isActive": true,
-    "createdAt": "2026-11-03T09:00:00.000Z"
+    "createdAt": "2026-11-03T09:00:00.000Z",
+    "tutorAvatar": "https://api.dicebear.com/9.x/notionists/png?seed=Farhan%20Ahmed&size=96"
   },
   {
     "title": "Class 8 General Science Coaching",
@@ -59,9 +65,11 @@
     "description": "Easy explanations of physics, chemistry and biology topics with quizzes and chapter-wise revision.",
     "tutorName": "Sadia Rahman",
     "tutorEmail": "sadia.science@example.com",
+    "avatarImage": "https://i.pravatar.cc/150?img=44",
     "approvalStatus": "approved",
     "isActive": true,
-    "createdAt": "2026-11-04T09:00:00.000Z"
+    "createdAt": "2026-11-04T09:00:00.000Z",
+    "tutorAvatar": "https://api.dicebear.com/9.x/notionists/png?seed=Sadia%20Rahman&size=96"
   },
   {
     "title": "HSC Chemistry Complete Preparation",
@@ -75,9 +83,11 @@
     "description": "Organic and inorganic chemistry lessons, reaction practice, CQ and MCQ preparation with doubt-solving sessions.",
     "tutorName": "Mahmud Hasan",
     "tutorEmail": "mahmud.chem@example.com",
+    "avatarImage": "https://i.pravatar.cc/150?img=14",
     "approvalStatus": "approved",
     "isActive": true,
-    "createdAt": "2026-11-05T09:00:00.000Z"
+    "createdAt": "2026-11-05T09:00:00.000Z",
+    "tutorAvatar": "https://api.dicebear.com/9.x/notionists/png?seed=Mahmud%20Hasan&size=96"
   },
   {
     "title": "Primary English and Mathematics",
@@ -91,9 +101,11 @@
     "description": "Friendly online lessons for primary learners, focusing on reading, basic grammar and arithmetic foundations.",
     "tutorName": "Rafia Akter",
     "tutorEmail": "rafia.primary@example.com",
+    "avatarImage": "https://i.pravatar.cc/150?img=45",
     "approvalStatus": "approved",
     "isActive": true,
-    "createdAt": "2026-11-06T09:00:00.000Z"
+    "createdAt": "2026-11-06T09:00:00.000Z",
+    "tutorAvatar": "https://api.dicebear.com/9.x/notionists/png?seed=Rafia%20Akter&size=96"
   },
   {
     "title": "Class 10 Higher Mathematics",
@@ -107,9 +119,11 @@
     "description": "Step-by-step lessons on trigonometry, algebra, geometry and calculus basics with regular model tests.",
     "tutorName": "Tanvir Hossain",
     "tutorEmail": "tanvir.math@example.com",
+    "avatarImage": "https://i.pravatar.cc/150?img=15",
     "approvalStatus": "approved",
     "isActive": true,
-    "createdAt": "2026-11-07T09:00:00.000Z"
+    "createdAt": "2026-11-07T09:00:00.000Z",
+    "tutorAvatar": "https://api.dicebear.com/9.x/notionists/png?seed=Tanvir%20Hossain&size=96"
   },
   {
     "title": "IELTS Academic Preparation Online",
@@ -123,9 +137,11 @@
     "description": "Guided IELTS listening, reading, writing and speaking practice with feedback on assignments and mock tests.",
     "tutorName": "Mehedi Karim",
     "tutorEmail": "mehedi.ielts@example.com",
+    "avatarImage": "https://i.pravatar.cc/150?img=16",
     "approvalStatus": "approved",
     "isActive": true,
-    "createdAt": "2026-11-08T09:00:00.000Z"
+    "createdAt": "2026-11-08T09:00:00.000Z",
+    "tutorAvatar": "https://api.dicebear.com/9.x/notionists/png?seed=Mehedi%20Karim&size=96"
   },
   {
     "title": "Class 7 Mathematics Foundation",
@@ -139,9 +155,11 @@
     "description": "Build strong number sense and problem-solving skills through interactive online lessons and homework support.",
     "tutorName": "Jannatul Ferdous",
     "tutorEmail": "jannatul.math@example.com",
+    "avatarImage": "https://i.pravatar.cc/150?img=46",
     "approvalStatus": "approved",
     "isActive": true,
-    "createdAt": "2026-11-09T09:00:00.000Z"
+    "createdAt": "2026-11-09T09:00:00.000Z",
+    "tutorAvatar": "https://api.dicebear.com/9.x/notionists/png?seed=Jannatul%20Ferdous&size=96"
   },
   {
     "title": "HSC Biology 2nd Paper",
@@ -155,9 +173,11 @@
     "description": "Human physiology, genetics and biotechnology explained with diagrams, MCQ drills and board questions.",
     "tutorName": "Dr. Tasnim Sultana",
     "tutorEmail": "tasnim.bio@example.com",
+    "avatarImage": "https://i.pravatar.cc/150?img=48",
     "approvalStatus": "approved",
     "isActive": true,
-    "createdAt": "2026-11-10T09:00:00.000Z"
+    "createdAt": "2026-11-10T09:00:00.000Z",
+    "tutorAvatar": "https://api.dicebear.com/9.x/notionists/png?seed=Dr.%20Tasnim%20Sultana&size=96"
   },
   {
     "title": "Class 6 Bangla Language and Literature",
@@ -171,9 +191,11 @@
     "description": "Bangla grammar, reading comprehension, creative writing and textbook-based lesson support.",
     "tutorName": "Mst. Sharmin Akter",
     "tutorEmail": "sharmin.bangla@example.com",
+    "avatarImage": "https://i.pravatar.cc/150?img=49",
     "approvalStatus": "approved",
     "isActive": true,
-    "createdAt": "2026-11-11T09:00:00.000Z"
+    "createdAt": "2026-11-11T09:00:00.000Z",
+    "tutorAvatar": "https://api.dicebear.com/9.x/notionists/png?seed=Mst.%20Sharmin%20Akter&size=96"
   },
   {
     "title": "University Admission Math Practice",
@@ -187,9 +209,11 @@
     "description": "Admission-focused math problem solving, timed practice sets and strategy sessions for university applicants.",
     "tutorName": "Rakibul Islam",
     "tutorEmail": "rakib.admission@example.com",
+    "avatarImage": "https://i.pravatar.cc/150?img=17",
     "approvalStatus": "approved",
     "isActive": true,
-    "createdAt": "2026-11-12T09:00:00.000Z"
+    "createdAt": "2026-11-12T09:00:00.000Z",
+    "tutorAvatar": "https://api.dicebear.com/9.x/notionists/png?seed=Rakibul%20Islam&size=96"
   },
   {
     "title": "Class 9 ICT and Computer Basics",
@@ -203,9 +227,11 @@
     "description": "ICT fundamentals, digital safety, basic programming concepts and practical demonstrations through screen sharing.",
     "tutorName": "Shakib Mahmud",
     "tutorEmail": "shakib.ict@example.com",
+    "avatarImage": "https://i.pravatar.cc/150?img=18",
     "approvalStatus": "approved",
     "isActive": true,
-    "createdAt": "2026-11-13T09:00:00.000Z"
+    "createdAt": "2026-11-13T09:00:00.000Z",
+    "tutorAvatar": "https://api.dicebear.com/9.x/notionists/png?seed=Shakib%20Mahmud&size=96"
   },
   {
     "title": "HSC Accounting First Paper",
@@ -219,9 +245,11 @@
     "description": "Accounting principles, journal, ledger and financial statements with worked examples and exam practice.",
     "tutorName": "Nabila Chowdhury",
     "tutorEmail": "nabila.accounting@example.com",
+    "avatarImage": "https://i.pravatar.cc/150?img=50",
     "approvalStatus": "approved",
     "isActive": true,
-    "createdAt": "2026-11-14T09:00:00.000Z"
+    "createdAt": "2026-11-14T09:00:00.000Z",
+    "tutorAvatar": "https://api.dicebear.com/9.x/notionists/png?seed=Nabila%20Chowdhury&size=96"
   },
   {
     "title": "Class 8 English Spoken Practice",
@@ -235,9 +263,11 @@
     "description": "Build confidence in everyday English through guided conversation, vocabulary games and pronunciation practice.",
     "tutorName": "Imran Hossain",
     "tutorEmail": "imran.spoken@example.com",
+    "avatarImage": "https://i.pravatar.cc/150?img=19",
     "approvalStatus": "approved",
     "isActive": true,
-    "createdAt": "2026-11-15T09:00:00.000Z"
+    "createdAt": "2026-11-15T09:00:00.000Z",
+    "tutorAvatar": "https://api.dicebear.com/9.x/notionists/png?seed=Imran%20Hossain&size=96"
   },
   {
     "title": "Class 10 Chemistry Revision Batch",
@@ -251,9 +281,11 @@
     "description": "Chapter-wise chemistry revision, equations, practical concepts and short exams for SSC preparation.",
     "tutorName": "Ayesha Siddika",
     "tutorEmail": "ayesha.chem@example.com",
+    "avatarImage": "https://i.pravatar.cc/150?img=51",
     "approvalStatus": "approved",
     "isActive": true,
-    "createdAt": "2026-11-16T09:00:00.000Z"
+    "createdAt": "2026-11-16T09:00:00.000Z",
+    "tutorAvatar": "https://api.dicebear.com/9.x/notionists/png?seed=Ayesha%20Siddika&size=96"
   },
   {
     "title": "Class 5 Science and Environment",
@@ -267,9 +299,11 @@
     "description": "Fun and simple science lessons using everyday examples, illustrations and short interactive quizzes.",
     "tutorName": "Sabbir Ahmed",
     "tutorEmail": "sabbir.science@example.com",
+    "avatarImage": "https://i.pravatar.cc/150?img=20",
     "approvalStatus": "approved",
     "isActive": true,
-    "createdAt": "2026-11-17T09:00:00.000Z"
+    "createdAt": "2026-11-17T09:00:00.000Z",
+    "tutorAvatar": "https://api.dicebear.com/9.x/notionists/png?seed=Sabbir%20Ahmed&size=96"
   },
   {
     "title": "HSC Higher Mathematics 2nd Paper",
@@ -283,9 +317,11 @@
     "description": "Advanced algebra, trigonometry and calculus preparation with detailed solutions and weekly problem sets.",
     "tutorName": "Fahim Reza",
     "tutorEmail": "fahim.hmath@example.com",
+    "avatarImage": "https://i.pravatar.cc/150?img=21",
     "approvalStatus": "approved",
     "isActive": true,
-    "createdAt": "2026-11-18T09:00:00.000Z"
+    "createdAt": "2026-11-18T09:00:00.000Z",
+    "tutorAvatar": "https://api.dicebear.com/9.x/notionists/png?seed=Fahim%20Reza&size=96"
   },
   {
     "title": "Class 9 Geography and History",
@@ -299,9 +335,11 @@
     "description": "Understand history, geography and social science topics through maps, timelines and discussion-based lessons.",
     "tutorName": "Mariya Islam",
     "tutorEmail": "mariya.social@example.com",
+    "avatarImage": "https://i.pravatar.cc/150?img=52",
     "approvalStatus": "approved",
     "isActive": true,
-    "createdAt": "2026-11-18T10:00:00.000Z"
+    "createdAt": "2026-11-18T10:00:00.000Z",
+    "tutorAvatar": "https://api.dicebear.com/9.x/notionists/png?seed=Mariya%20Islam&size=96"
   },
   {
     "title": "University CSE Programming Fundamentals",
@@ -315,8 +353,10 @@
     "description": "Beginner-friendly programming mentorship covering problem solving, programming fundamentals and guided coding exercises.",
     "tutorName": "Arif Hossain",
     "tutorEmail": "arif.code@example.com",
+    "avatarImage": "https://i.pravatar.cc/150?img=22",
     "approvalStatus": "approved",
     "isActive": true,
-    "createdAt": "2026-11-18T11:00:00.000Z"
+    "createdAt": "2026-11-18T11:00:00.000Z",
+    "tutorAvatar": "https://api.dicebear.com/9.x/notionists/png?seed=Arif%20Hossain&size=96"
   }
 ]

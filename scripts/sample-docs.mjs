@@ -34,8 +34,8 @@ try {
       console.log("(empty — will be created on first write)");
       continue;
     }
-    const { _id, ...rest } = doc;
-    console.log(Object.keys(rest).join(", "));
+    const fields = Object.keys(doc).filter((key) => key !== "_id");
+    console.log(fields.join(", "));
   }
 } finally {
   await client.close();

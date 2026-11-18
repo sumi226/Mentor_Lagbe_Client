@@ -2,9 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
+
 /**
  * Animates a number from 0 → value the first time it scrolls into view.
- * Falls back to the final value when JS motion is reduced.
+ * Falls back to the final value when JS motion is reduced — the reduced
+ * state is read during render (useSyncExternalStore), never via setState
+ * inside the effect.
  */
 export function CountUp({
   value,
@@ -17,17 +21,14 @@ export function CountUp({
 }) {
   const ref = useRef<HTMLSpanElement>(null);
   const [display, setDisplay] = useState(0);
+  const reducedMotion = useReducedMotion();
+
+  // Reduced motion: show the final number immediately, skip the animation.
+  const shown = reducedMotion ? value : display;
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
-    if (
-      typeof window.matchMedia === "function" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    ) {
-      setDisplay(value);
-      return;
-    }
+    if (!el || reducedMotion) return;
 
     let raf = 0;
     const observer = new IntersectionObserver(
@@ -51,11 +52,11 @@ export function CountUp({
       observer.disconnect();
       cancelAnimationFrame(raf);
     };
-  }, [value, duration]);
+  }, [value, duration, reducedMotion]);
 
   return (
     <span ref={ref}>
-      {display.toLocaleString("en-US")}
+      {shown.toLocaleString("en-US")}
       {suffix}
     </span>
   );

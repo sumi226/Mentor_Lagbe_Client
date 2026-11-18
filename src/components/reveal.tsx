@@ -6,7 +6,10 @@ import { cn } from "@/lib/utils";
 
 /**
  * Scroll-reveal wrapper: children fade + slide up the first time they
- * enter the viewport. Respects prefers-reduced-motion.
+ * enter the viewport. Reduced motion is handled by CSS in globals.css
+ * (`.reveal` is forced visible under prefers-reduced-motion), so this
+ * effect only wires the IntersectionObserver — the setState happens in
+ * its async callback, never synchronously in the effect body.
  */
 export function Reveal({
   children,
@@ -23,13 +26,6 @@ export function Reveal({
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    if (
-      typeof window.matchMedia === "function" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    ) {
-      setVisible(true);
-      return;
-    }
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {

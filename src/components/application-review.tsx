@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Check, Loader2, X } from "lucide-react";
+import { getAuthHeaders } from "@/lib/api-token";
 
 import { Button } from "@/components/ui/button";
 
@@ -27,7 +28,7 @@ export function ApplicationReview({
     try {
       const res = await fetch("/api/applications", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(await getAuthHeaders()) },
         body: JSON.stringify({ id, action }),
       });
       const body = await res.json().catch(() => ({}));

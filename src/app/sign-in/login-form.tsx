@@ -3,6 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import { fetchAuthToken } from "@/lib/api-token";
+import { validateSignIn } from "@/lib/auth-validation";
+import { toast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,27 +21,55 @@ export function LoginForm() {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
+
+    // Explicit validation: required fields, email format, password length.
+    const invalid = validateSignIn({ email, password });
+    if (invalid) {
+      setError(invalid);
+      toast.add({
+        type: "error",
+        title: "Check your details",
+        description: invalid,
+      });
+      return;
+    }
+
     setLoading(true);
 
     const { error: signInError } = await authClient.signIn.email({
-      email,
+      email: email.trim(),
       password,
     });
 
     if (signInError) {
-      setError(
-        signInError.message ?? "Something went wrong. Please try again."
-      );
+      const message =
+        signInError.message ?? "Something went wrong. Please try again.";
+      setError(message);
+      toast.add({
+        type: "error",
+        title: "Sign-in failed",
+        description: message,
+      });
       setLoading(false);
       return;
     }
+
+    // JWT integration: grab a token now so the first protected API request
+    // already carries `Authorization: Bearer <jwt>`.
+    await fetchAuthToken(true);
+
+    toast.add({
+      type: "success",
+      title: "Welcome back!",
+      description: "You are signed in.",
+    });
 
     router.push("/dashboard");
     router.refresh();
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="email">Email</Label>
         <Input

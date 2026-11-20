@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { clearAuthToken } from "@/lib/api-token";
 import {
   ChevronDown,
   LayoutDashboard,
@@ -130,6 +131,7 @@ export function SiteHeader() {
 
   const handleSignOut = async () => {
     await authClient.signOut();
+    clearAuthToken(); // drop the cached JWT so it can't outlive the session
     router.push("/");
     router.refresh();
   };

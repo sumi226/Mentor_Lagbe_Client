@@ -29,36 +29,39 @@ export default async function AdminTransactionsPage() {
     db
       .collection("payments")
       .find({})
-      .sort({ createdAt: -1 })
+      .sort({ paidAt: -1 })
       .limit(100)
       .toArray(),
     db
       .collection("payments")
       .aggregate([
-        { $match: { status: "paid" } },
+        { $match: { paymentStatus: "paid" } },
         { $group: { _id: null, total: { $sum: "$amount" } } },
       ])
       .toArray(),
-    db.collection("payments").countDocuments({ status: "pending" }),
+    db.collection("payments").countDocuments({ paymentStatus: { $ne: "paid" } }),
   ]);
 
   const payments = docs.map((doc) => ({
     id: String(doc._id),
     userEmail: String(doc.userEmail ?? ""),
     userName: String(doc.userName ?? ""),
+    userRole: String(doc.userRole ?? ""),
     transactionId: String(doc.transactionId ?? doc.stripeSessionId ?? ""),
     planName: String(doc.planName ?? doc.plan ?? "Pro"),
     amount: Number(doc.amount ?? 0),
     currency: String(doc.currency ?? "usd"),
-    status: String(doc.status ?? "pending"),
-    // Payment Date: set by /api/checkout/verify once Stripe confirms;
-    // fall back to the record date while a payment is still pending.
-    paymentDate:
-      doc.paymentDate instanceof Date
-        ? doc.paymentDate
-        : doc.createdAt instanceof Date
-          ? doc.createdAt
-          : new Date(),
+    status: String(doc.paymentStatus ?? doc.status ?? "paid"),
+    // Paid At: written by /api/checkout/verify when Stripe confirms the
+    // session; older records fall back to their legacy date fields.
+    paidAt:
+      doc.paidAt instanceof Date
+        ? doc.paidAt
+        : doc.paymentDate instanceof Date
+          ? doc.paymentDate
+          : doc.createdAt instanceof Date
+            ? doc.createdAt
+            : new Date(),
   }));
 
   const revenueCents = Number(paidAgg[0]?.total ?? 0);
@@ -110,8 +113,9 @@ export default async function AdminTransactionsPage() {
                   </p>
                   <p className="mt-0.5 truncate text-sm text-muted-foreground">
                     {payment.userName ? `${payment.userName} · ` : ""}
+                    {payment.userRole ? `${payment.userRole} · ` : ""}
                     {payment.userEmail} ·{" "}
-                    {format(payment.paymentDate, "dd MMM yyyy, HH:mm")}
+                    {format(payment.paidAt, "dd MMM yyyy, HH:mm")}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">

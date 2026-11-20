@@ -43,7 +43,7 @@ export default async function TutorDashboardPage() {
         ? { tuitionId: { $in: tuitionDocs.map((t) => String(t._id)) } }
         : { tuitionId: { $in: [] } }
     )
-    .sort({ createdAt: -1 })
+    .sort({ appliedAt: -1 })
     .limit(30)
     .toArray();
 
@@ -64,13 +64,14 @@ export default async function TutorDashboardPage() {
   const applicants = applicantDocs.map((doc) => ({
     id: String(doc._id),
     tuitionTitle: String(doc.tuitionTitle ?? ""),
+    subject: String(doc.subject ?? ""),
     studentName: String(doc.studentName ?? ""),
     studentEmail: String(doc.studentEmail ?? ""),
     studentPhone: String(doc.studentPhone ?? doc.phone ?? ""),
     preferredSchedule: String(doc.preferredSchedule ?? ""),
-    message: String(doc.message ?? ""),
+    studentNote: String(doc.studentNote ?? doc.message ?? ""),
     status: String(doc.status ?? "pending"),
-    createdAt: doc.createdAt instanceof Date ? doc.createdAt : new Date(),
+    appliedAt: doc.appliedAt instanceof Date ? doc.appliedAt : new Date(),
   }));
 
   const isPro = String(planDoc?.plan ?? "free") === "pro";
@@ -227,7 +228,7 @@ export default async function TutorDashboardPage() {
                   </div>
                 </div>
                 <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
-                  {app.message}
+                  {app.studentNote}
                 </p>
                 {(app.preferredSchedule || app.studentPhone) && (
                   <p className="mt-1.5 text-xs text-muted-foreground">
@@ -251,7 +252,7 @@ export default async function TutorDashboardPage() {
                   </p>
                 )}
                 <p className="mt-2 text-xs text-muted-foreground">
-                  {formatDistanceToNow(app.createdAt, { addSuffix: true })}
+                  {formatDistanceToNow(app.appliedAt, { addSuffix: true })}
                 </p>
               </li>
             ))}

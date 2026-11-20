@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 
-import { auth } from "@/lib/auth";
+import { getAuthSession } from "@/lib/api-auth";
 import { client, db } from "@/lib/mongodb";
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -15,7 +15,7 @@ type RouteContext = { params: Promise<{ id: string }> };
  */
 export async function PATCH(req: Request, { params }: RouteContext) {
   try {
-    const session = await auth.api.getSession({ headers: req.headers });
+    const session = await getAuthSession(req);
     const user = session?.user;
     if (!user) {
       return NextResponse.json(
@@ -129,7 +129,7 @@ export async function PATCH(req: Request, { params }: RouteContext) {
 /** Deletes an own tuition post together with its student applications. */
 export async function DELETE(req: Request, { params }: RouteContext) {
   try {
-    const session = await auth.api.getSession({ headers: req.headers });
+    const session = await getAuthSession(req);
     const user = session?.user;
     if (!user) {
       return NextResponse.json(

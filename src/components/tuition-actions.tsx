@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { getAuthHeaders } from "@/lib/api-token";
 import {
   CircleDot,
   Loader2,
@@ -65,7 +66,7 @@ export function TuitionActions({ tuition }: { tuition: ManageableTuition }) {
     try {
       const res = await fetch(`/api/tuitions/${tuition.id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(await getAuthHeaders()) },
         body: JSON.stringify({
           title: String(data.get("title") ?? ""),
           subject: String(data.get("subject") ?? ""),
@@ -97,7 +98,7 @@ export function TuitionActions({ tuition }: { tuition: ManageableTuition }) {
     try {
       const res = await fetch(`/api/tuitions/${tuition.id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(await getAuthHeaders()) },
         body: JSON.stringify({ action: "toggle-active" }),
       });
       const body = await res.json().catch(() => ({}));
@@ -119,6 +120,7 @@ export function TuitionActions({ tuition }: { tuition: ManageableTuition }) {
     try {
       const res = await fetch(`/api/tuitions/${tuition.id}`, {
         method: "DELETE",
+        headers: await getAuthHeaders(),
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {

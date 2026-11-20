@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
-import { auth } from "@/lib/auth";
-import { client, db } from "@/lib/mongodb";
+import { getAuthSession } from "@/lib/api-auth";
 import { FREE_FEATURES, PRO_PLANS, type PlanKey } from "@/lib/plans";
 
 /**
@@ -15,7 +14,7 @@ import { FREE_FEATURES, PRO_PLANS, type PlanKey } from "@/lib/plans";
  */
 export async function POST(req: Request) {
   try {
-    const session = await auth.api.getSession({ headers: req.headers });
+    const session = await getAuthSession(req);
     if (!session?.user) {
       return NextResponse.json(
         { error: "unauthorized", message: "Please sign in to subscribe." },
@@ -75,27 +74,9 @@ export async function POST(req: Request) {
       },
     });
 
-    // Record the transaction for the admin dashboard. It starts as "pending"
-    // and is marked "paid" by /api/checkout/verify once Stripe confirms it.
-    try {
-      await client.connect();
-      await db.collection("payments").insertOne({
-        userId: String(session.user.id ?? ""),
-        userEmail: String(session.user.email ?? ""),
-        userName: String(session.user.name ?? ""),
-        plan: planKey,
-        planName: plan.name,
-        amount: plan.amount,
-        currency: plan.currency,
-        status: "pending",
-        transactionId: checkout.id,
-        stripeSessionId: checkout.id,
-        paymentDate: null, // set to the real date once Stripe confirms it
-        createdAt: new Date(),
-      });
-    } catch (recordError) {
-      console.error("[checkout] failed to record payment:", recordError);
-    }
+    // The payments record is NOT written here: per the spec it is inserted
+    // by session verification (/api/checkout/verify) once Stripe confirms
+    // the payment — see Step 6 of the collection workflow.
 
     return NextResponse.json({ url: checkout.url });
   } catch (error) {

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 
-import { auth } from "@/lib/auth";
+import { getAuthSession } from "@/lib/api-auth";
 import { client, db } from "@/lib/mongodb";
 
 const ROLES = ["student", "tutor", "admin"] as const;
@@ -12,7 +12,7 @@ const ROLES = ["student", "tutor", "admin"] as const;
  */
 export async function POST(req: Request) {
   try {
-    const session = await auth.api.getSession({ headers: req.headers });
+    const session = await getAuthSession(req);
     const user = session?.user;
     if (!user) {
       return NextResponse.json(

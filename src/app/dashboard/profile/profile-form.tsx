@@ -6,6 +6,7 @@ import { useState, type FormEvent } from "react";
 import { Loader2, Save, UserRound } from "lucide-react";
 
 import { authClient } from "@/lib/auth-client";
+import { fetchAuthToken } from "@/lib/api-token";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -63,6 +64,9 @@ export function ProfileForm({ initial }: { initial: Initial }) {
         return;
       }
       setMessage({ type: "success", text: "Profile updated successfully." });
+      // The cached JWT still carries the old profile — mint a fresh one so
+      // protected API requests send the updated name / phone / bio.
+      await fetchAuthToken(true);
       router.refresh();
     } catch {
       setMessage({ type: "error", text: "Network error — please try again." });

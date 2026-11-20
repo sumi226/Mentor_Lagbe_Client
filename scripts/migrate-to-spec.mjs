@@ -9,9 +9,13 @@
  * 2. Backfills the new spec fields on documents created before this change:
  *    - users:            plan ("free"), phone (""), bio (""), image (null)
  *    - applications:     studentPhone (from legacy "phone"), tutorEmail
- *                        (from the tuition post), preferredSchedule ("")
+ *                        (from the tuition post), preferredSchedule (""), plus
+ *                        the spec renames message → studentNote,
+ *                        createdAt → appliedAt, and the denormalised
+ *                        subject / monthlyFee copied from the tuition post
  *    - payments:         userName, transactionId (from stripeSessionId),
- *                        paymentDate (from paidAt/createdAt)
+ *                        plus the spec renames status → paymentStatus,
+ *                        paymentDate → paidAt, and userRole (from users)
  *
  * Safe to re-run: every step skips documents that already have the field.
  * Usage: node scripts/migrate-to-spec.mjs
@@ -128,36 +132,117 @@ try {
       { phone: { $exists: true }, studentPhone: { $exists: true } },
       { $unset: { phone: 1 } }
     );
+
+    // spec renames: message → studentNote, createdAt → appliedAt
+    const note = await applications.updateMany(
+      { studentNote: { $exists: false }, message: { $exists: true } },
+      [{ $set: { studentNote: { $ifNull: ["$message", ""] } } }]
+    );
+    const appliedAt = await applications.updateMany(
+      { appliedAt: { $exists: false } },
+      [{ $set: { appliedAt: { $ifNull: ["$createdAt", "$$NOW"] } } }]
+    );
+    await applications.updateMany(
+      { message: { $exists: true }, studentNote: { $exists: true } },
+      { $unset: { message: 1 } }
+    );
+    await applications.updateMany(
+      { createdAt: { $exists: true }, appliedAt: { $exists: true } },
+      { $unset: { createdAt: 1 } }
+    );
+
+    // spec fields denormalised from the tuition post: subject / monthlyFee
+    const missingSpecFields = await applications
+      .find({
+        $or: [{ subject: { $exists: false } }, { monthlyFee: { $exists: false } }],
+      })
+      .toArray();
+    for (const doc of missingSpecFields) {
+      const tuitionId = String(doc.tuitionId ?? "");
+      let subject = String(doc.subject ?? "");
+      let monthlyFee = Number(doc.monthlyFee ?? 0);
+      if (ObjectId.isValid(tuitionId)) {
+        const tuition = await db
+          .collection("tuitions")
+          .findOne(
+            { _id: new ObjectId(tuitionId) },
+            { projection: { subject: 1, monthlyFee: 1 } }
+          );
+        if (!subject) subject = String(tuition?.subject ?? "");
+        if (!monthlyFee) monthlyFee = Number(tuition?.monthlyFee ?? 0);
+      }
+      await applications.updateOne(
+        { _id: doc._id },
+        { $set: { subject, monthlyFee } }
+      );
+    }
+
     console.log(
-      `applications: preferredSchedule defaulted on ${schedule.modifiedCount}, studentPhone filled on ${withLegacyPhone.length + phone.modifiedCount}, tutorEmail filled on ${missingTutor.length}, legacy phone removed on ${legacy.modifiedCount}`
+      `applications: preferredSchedule defaulted on ${schedule.modifiedCount}, studentPhone filled on ${withLegacyPhone.length + phone.modifiedCount}, tutorEmail filled on ${missingTutor.length}, legacy phone removed on ${legacy.modifiedCount}, studentNote filled on ${note.modifiedCount}, appliedAt filled on ${appliedAt.modifiedCount}, subject/monthlyFee filled on ${missingSpecFields.length}`
     );
   }
 
-  // ---- 4. payments: userName / transactionId / paymentDate ---------------
+  // ---- 4. payments: spec fields + status/paidAt renames ------------------
   const payments = db.collection("payments");
   if (names.includes("payments")) {
     const tx = await payments.updateMany(
       { transactionId: { $exists: false }, stripeSessionId: { $exists: true } },
       [{ $set: { transactionId: "$stripeSessionId" } }]
     );
-    const date = await payments.updateMany(
-      { paymentDate: { $exists: false } },
-      [{ $set: { paymentDate: { $ifNull: ["$paidAt", "$createdAt"] } } }]
+    // legacy paymentDate → spec paidAt
+    const paidAt = await payments.updateMany(
+      { paidAt: { $exists: false } },
+      [
+        {
+          $set: {
+            paidAt: { $ifNull: ["$paymentDate", "$createdAt", "$$NOW"] },
+          },
+        },
+      ]
+    );
+    // legacy status → spec paymentStatus
+    const paymentStatus = await payments.updateMany(
+      { paymentStatus: { $exists: false } },
+      [{ $set: { paymentStatus: { $ifNull: ["$status", "paid"] } } }]
     );
 
     const missingName = await payments
       .find({ userName: { $exists: false } })
       .toArray();
-    for (const doc of missingName) {
+    const missingRole = await payments
+      .find({ userRole: { $exists: false } })
+      .toArray();
+    const seen = new Set();
+    for (const doc of [...missingName, ...missingRole]) {
+      if (seen.has(String(doc._id))) continue;
+      seen.add(String(doc._id));
       const email = String(doc.userEmail ?? "");
       const user = email ? await users.findOne({ email }) : null;
-      await payments.updateOne(
-        { _id: doc._id },
-        { $set: { userName: String(user?.name ?? "") } }
-      );
+      const set = {};
+      if (doc.userName === undefined) set.userName = String(user?.name ?? "");
+      if (doc.userRole === undefined)
+        set.userRole = String(user?.role ?? "student");
+      if (Object.keys(set).length > 0) {
+        await payments.updateOne({ _id: doc._id }, { $set: set });
+      }
     }
+
+    // drop the legacy duplicates once the spec fields hold the values
+    const droppedStatus = await payments.updateMany(
+      { paymentStatus: { $exists: true }, status: { $exists: true } },
+      { $unset: { status: 1 } }
+    );
+    const droppedDate = await payments.updateMany(
+      { paidAt: { $exists: true }, paymentDate: { $exists: true } },
+      { $unset: { paymentDate: 1 } }
+    );
+    await payments.updateMany(
+      { paidAt: { $exists: true }, createdAt: { $exists: true } },
+      { $unset: { createdAt: 1 } }
+    );
+
     console.log(
-      `payments: transactionId filled on ${tx.modifiedCount}, paymentDate filled on ${date.modifiedCount}, userName filled on ${missingName.length}`
+      `payments: transactionId filled on ${tx.modifiedCount}, paidAt filled on ${paidAt.modifiedCount}, paymentStatus filled on ${paymentStatus.modifiedCount}, userName/userRole filled on ${missingName.length + missingRole.length}, legacy status dropped on ${droppedStatus.modifiedCount}, legacy paymentDate dropped on ${droppedDate.modifiedCount}`
     );
   }
 

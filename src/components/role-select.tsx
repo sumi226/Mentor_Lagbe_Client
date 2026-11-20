@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
+import { getAuthHeaders } from "@/lib/api-token";
 
 import {
   NativeSelect,
@@ -33,7 +34,7 @@ export function RoleSelect({
     try {
       const res = await fetch("/api/admin/users", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(await getAuthHeaders()) },
         body: JSON.stringify({ id: userId, role: next }),
       });
       const body = await res.json().catch(() => ({}));

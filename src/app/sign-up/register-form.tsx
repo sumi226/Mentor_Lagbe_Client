@@ -3,6 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { authClient, type UserRole } from "@/lib/auth-client";
+import { fetchAuthToken } from "@/lib/api-token";
+import { validateSignUp } from "@/lib/auth-validation";
+import { toast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,29 +44,60 @@ export function RegisterForm() {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
+
+    // Spec: validate required fields, email format and password length
+    // before hitting the auth API.
+    const invalid = validateSignUp({ name, email, password, role });
+    if (invalid) {
+      setError(invalid);
+      toast.add({
+        type: "error",
+        title: "Check your details",
+        description: invalid,
+      });
+      return;
+    }
+
     setLoading(true);
 
     const { error: signUpError } = await authClient.signUp.email({
-      name,
-      email,
+      name: name.trim(),
+      email: email.trim(),
       password,
       role,
+      // plan defaults to "free" (better-auth additionalFields.plan) — only
+      // the Stripe verification endpoint may upgrade it to "pro".
     });
 
     if (signUpError) {
-      setError(
-        signUpError.message ?? "Something went wrong. Please try again."
-      );
+      const message =
+        signUpError.message ?? "Something went wrong. Please try again.";
+      setError(message);
+      toast.add({
+        type: "error",
+        title: "Sign-up failed",
+        description: message,
+      });
       setLoading(false);
       return;
     }
+
+    // JWT integration: fetch a token for the fresh session so protected
+    // API calls can send `Authorization: Bearer <jwt>` right away.
+    await fetchAuthToken(true);
+
+    toast.add({
+      type: "success",
+      title: "Account created",
+      description: `Welcome to MentorLagbe, ${name.trim().split(" ")[0]}!`,
+    });
 
     router.push("/dashboard");
     router.refresh();
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
       {/* Role picker */}
       <div className="flex flex-col gap-1.5">
         <Label>I want to join as</Label>

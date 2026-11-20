@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { Loader2, Plus, Send } from "lucide-react";
+import { getAuthHeaders } from "@/lib/api-token";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -43,7 +44,7 @@ export function PostTuitionButton() {
     try {
       const res = await fetch("/api/tuitions", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(await getAuthHeaders()) },
         body: JSON.stringify({
           title: String(data.get("title") ?? ""),
           subject: String(data.get("subject") ?? ""),

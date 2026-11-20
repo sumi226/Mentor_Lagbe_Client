@@ -1,18 +1,19 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
-import { auth } from "@/lib/auth";
+import { getAuthSession } from "@/lib/api-auth";
 import { client, db } from "@/lib/mongodb";
-import type { PlanKey } from "@/lib/plans";
+import { PRO_PLANS, type PlanKey } from "@/lib/plans";
 
 /**
  * Confirms a Stripe Checkout Session after the buyer returns to
- * /payment/success: marks the recorded transaction as paid and upgrades the
- * user's plan to "pro". Falls back to 503 when Stripe isn't configured yet.
+ * /payment/success. Per the spec this is where the payments record is
+ * inserted (paymentStatus "paid", paidAt) and the user's plan is upgraded
+ * to "pro". Falls back to 503 when Stripe isn't configured yet.
  */
 export async function POST(req: Request) {
   try {
-    const session = await auth.api.getSession({ headers: req.headers });
+    const session = await getAuthSession(req);
     if (!session?.user) {
       return NextResponse.json(
         { error: "unauthorized", message: "Please sign in first." },
@@ -55,16 +56,32 @@ export async function POST(req: Request) {
         : "student";
 
     await client.connect();
-    await db.collection("payments").updateOne(
-      { stripeSessionId: sessionId },
-      {
-        $set: {
-          status: "paid",
-          paidAt: new Date(),
-          paymentDate: new Date(),
-        },
-      }
-    );
+
+    // Spec Step 6: session verification inserts the payment record and
+    // upgrades the user. Idempotent — re-verifying the same session (page
+    // refresh) must not create a duplicate record.
+    const plan = PRO_PLANS[planKey];
+    const existing = await db
+      .collection("payments")
+      .findOne({ stripeSessionId: sessionId });
+    if (!existing) {
+      await db.collection("payments").insertOne({
+        userId: String(session.user.id ?? ""),
+        userEmail: String(session.user.email ?? ""),
+        userName: String(session.user.name ?? ""),
+        userRole: String(session.user.role ?? "student"),
+        planName: plan.name,
+        amount: Number(checkout.amount_total ?? plan.amount),
+        currency: String(checkout.currency ?? plan.currency),
+        transactionId:
+          typeof checkout.payment_intent === "string"
+            ? checkout.payment_intent
+            : sessionId,
+        stripeSessionId: sessionId,
+        paymentStatus: "paid",
+        paidAt: new Date(),
+      });
+    }
     await db
       .collection("users")
       .updateOne(

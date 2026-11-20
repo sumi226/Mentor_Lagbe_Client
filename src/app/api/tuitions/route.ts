@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
 
-import { auth } from "@/lib/auth";
+import { getAuthSession } from "@/lib/api-auth";
 import { client, db } from "@/lib/mongodb";
 
 /**
- * Lets a signed-in tutor post a new tuition batch. The listing is created
- * as approvalStatus "pending" / isActive false and only goes live on the
- * browse page after an admin approves it.
+ * Lets a signed-in tutor post a new tuition batch. Per the spec the listing
+ * is created as approvalStatus "pending" / isActive true, and only appears
+ * on the browse page after an admin approves it (approved + isActive).
  */
 export async function POST(req: Request) {
   try {
-    const session = await auth.api.getSession({ headers: req.headers });
+    const session = await getAuthSession(req);
     const user = session?.user;
     if (!user) {
       return NextResponse.json(
@@ -88,7 +88,7 @@ export async function POST(req: Request) {
       tutorEmail: String(user.email ?? ""),
       tutorAvatar: String(body.tutorAvatar ?? ""),
       approvalStatus: "pending",
-      isActive: false,
+      isActive: true,
       createdAt: new Date(),
     });
 

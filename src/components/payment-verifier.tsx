@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Loader2, ShieldAlert, Sparkles } from "lucide-react";
+import { getAuthHeaders } from "@/lib/api-token";
 
 type State =
   | { kind: "idle" }
@@ -32,7 +33,7 @@ export function PaymentVerifier() {
       try {
         const res = await fetch("/api/checkout/verify", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...(await getAuthHeaders()) },
           body: JSON.stringify({ sessionId }),
         });
         const body = await res.json().catch(() => ({}));

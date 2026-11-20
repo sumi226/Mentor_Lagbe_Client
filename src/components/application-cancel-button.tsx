@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Loader2, Trash2 } from "lucide-react";
+import { getAuthHeaders } from "@/lib/api-token";
 
 import { Button } from "@/components/ui/button";
 
@@ -22,7 +23,7 @@ export function ApplicationCancelButton({ id }: { id: string }) {
     try {
       const res = await fetch("/api/applications", {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(await getAuthHeaders()) },
         body: JSON.stringify({ id }),
       });
       const body = await res.json().catch(() => ({}));

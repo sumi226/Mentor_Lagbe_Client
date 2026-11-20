@@ -14,6 +14,7 @@ import {
 
 import { authClient } from "@/lib/auth-client";
 import { FREE_FEATURES, PRO_PLANS, type PlanKey } from "@/lib/plans";
+import { getAuthHeaders } from "@/lib/api-token";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -42,7 +43,7 @@ export function PricingSection({ hideHeader = false }: { hideHeader?: boolean })
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(await getAuthHeaders()) },
         body: JSON.stringify({ plan: audience }),
       });
       const data = await res.json().catch(() => ({}));

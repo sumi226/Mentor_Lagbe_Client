@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 
-import { auth } from "@/lib/auth";
+import { getAuthSession } from "@/lib/api-auth";
 import { client, db } from "@/lib/mongodb";
 
 /**
@@ -11,7 +11,7 @@ import { client, db } from "@/lib/mongodb";
  */
 export async function POST(req: Request) {
   try {
-    const session = await auth.api.getSession({ headers: req.headers });
+    const session = await getAuthSession(req);
     const user = session?.user;
 
     if (!user) {
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     const name = String(body.name ?? user.name ?? "").trim();
     const phone = String(body.phone ?? "").trim().slice(0, 30);
     const schedule = String(body.preferredSchedule ?? "").trim().slice(0, 120);
-    const message = String(body.message ?? "").trim();
+    const note = String(body.studentNote ?? body.message ?? "").trim();
 
     if (!ObjectId.isValid(tuitionId)) {
       return NextResponse.json(
@@ -52,7 +52,7 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-    if (message.length < 10) {
+    if (note.length < 10) {
       return NextResponse.json(
         {
           error: "invalid-message",
@@ -87,9 +87,14 @@ export async function POST(req: Request) {
       );
     }
 
+    // Spec fields for the applications collection: tuitionId, tuitionTitle,
+    // subject, monthlyFee, tutorEmail, studentName, studentEmail,
+    // studentPhone, preferredSchedule, studentNote, status, appliedAt.
     await applications.insertOne({
       tuitionId,
       tuitionTitle: String(tuition.title ?? ""),
+      subject: String(tuition.subject ?? ""),
+      monthlyFee: Number(tuition.monthlyFee ?? 0),
       tutorName: String(tuition.tutorName ?? ""),
       tutorEmail: String(tuition.tutorEmail ?? ""),
       studentId: user.id,
@@ -97,9 +102,9 @@ export async function POST(req: Request) {
       studentEmail: String(user.email ?? ""),
       studentPhone: phone,
       preferredSchedule: schedule,
-      message,
+      studentNote: note,
       status: "pending",
-      createdAt: new Date(),
+      appliedAt: new Date(),
     });
 
     return NextResponse.json({ ok: true });
@@ -118,7 +123,7 @@ export async function POST(req: Request) {
  */
 export async function DELETE(req: Request) {
   try {
-    const session = await auth.api.getSession({ headers: req.headers });
+    const session = await getAuthSession(req);
     const user = session?.user;
 
     if (!user) {
@@ -180,7 +185,7 @@ export async function DELETE(req: Request) {
  */
 export async function PATCH(req: Request) {
   try {
-    const session = await auth.api.getSession({ headers: req.headers });
+    const session = await getAuthSession(req);
     const user = session?.user;
 
     if (!user) {

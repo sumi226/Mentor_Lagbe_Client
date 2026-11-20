@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { CheckCircle2, Loader2, LogIn, Send, ShieldAlert } from "lucide-react";
+import { getAuthHeaders } from "@/lib/api-token";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -100,13 +101,13 @@ export function ApplyTuitionButton({
     try {
       const res = await fetch("/api/applications", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(await getAuthHeaders()) },
         body: JSON.stringify({
           tuitionId,
           name: String(data.get("name") ?? ""),
           phone: String(data.get("phone") ?? ""),
           preferredSchedule: String(data.get("schedule") ?? ""),
-          message: String(data.get("message") ?? ""),
+          studentNote: String(data.get("message") ?? ""),
         }),
       });
       const body = await res.json().catch(() => ({}));

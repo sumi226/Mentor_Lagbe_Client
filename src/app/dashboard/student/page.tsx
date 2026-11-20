@@ -32,7 +32,7 @@ export default async function StudentDashboardPage() {
     db
       .collection("applications")
       .find({ studentId: user.id })
-      .sort({ createdAt: -1 })
+      .sort({ appliedAt: -1 })
       .limit(50)
       .toArray(),
     db.collection("users").findOne({ email: user.email }),
@@ -44,8 +44,8 @@ export default async function StudentDashboardPage() {
     tuitionTitle: String(doc.tuitionTitle ?? ""),
     tutorName: String(doc.tutorName ?? ""),
     status: String(doc.status ?? "pending"),
-    message: String(doc.message ?? ""),
-    createdAt: doc.createdAt instanceof Date ? doc.createdAt : new Date(),
+    studentNote: String(doc.studentNote ?? doc.message ?? ""),
+    appliedAt: doc.appliedAt instanceof Date ? doc.appliedAt : new Date(),
   }));
 
   const plan = String(planDoc?.plan ?? "free") === "pro" ? "Pro" : "Free";
@@ -123,7 +123,7 @@ export default async function StudentDashboardPage() {
                   <p className="truncate font-semibold">{app.tuitionTitle}</p>
                   <p className="mt-0.5 truncate text-sm text-muted-foreground">
                     Tutor: {app.tutorName} · Applied{" "}
-                    {formatDistanceToNow(app.createdAt, { addSuffix: true })}
+                    {formatDistanceToNow(app.appliedAt, { addSuffix: true })}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">

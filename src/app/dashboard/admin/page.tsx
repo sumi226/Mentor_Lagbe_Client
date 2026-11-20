@@ -64,13 +64,16 @@ export default async function AdminDashboardPage() {
     db.collection("users").countDocuments({ role: "tutor" }),
     db
       .collection("payments")
-      .aggregate([{ $match: { status: "paid" } }, { $group: { _id: null, total: { $sum: "$amount" } } }])
+      .aggregate([
+        { $match: { paymentStatus: "paid" } },
+        { $group: { _id: null, total: { $sum: "$amount" } } },
+      ])
       .toArray(),
     db.collection("payments").countDocuments(),
     db
       .collection("applications")
       .find({})
-      .sort({ createdAt: -1 })
+      .sort({ appliedAt: -1 })
       .limit(10)
       .toArray(),
   ]);
@@ -96,8 +99,12 @@ export default async function AdminDashboardPage() {
     studentName: String(doc.studentName ?? ""),
     tutorName: String(doc.tutorName ?? ""),
     status: String(doc.status ?? "pending"),
-    createdAt:
-      doc.createdAt instanceof Date ? doc.createdAt : new Date(),
+    appliedAt:
+      doc.appliedAt instanceof Date
+        ? doc.appliedAt
+        : doc.createdAt instanceof Date
+          ? doc.createdAt
+          : new Date(),
   }));
 
   const subPages = [
@@ -259,7 +266,7 @@ export default async function AdminDashboardPage() {
                   </p>
                   <p className="mt-0.5 truncate text-sm text-muted-foreground">
                     {app.tuitionTitle} ·{" "}
-                    {formatDistanceToNow(app.createdAt, { addSuffix: true })}
+                    {formatDistanceToNow(app.appliedAt, { addSuffix: true })}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">

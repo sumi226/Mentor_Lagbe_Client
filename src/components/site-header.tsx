@@ -30,7 +30,6 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { clearAuthToken } from "@/lib/api-token";
 import {
@@ -70,12 +69,23 @@ function getInitials(name?: string | null) {
     .toUpperCase();
 }
 
-/** Vertical link list used inside the mobile sheet (the desktop links
- *  live in the left menubar — SiteSidebar). */
-function NavLinks({ pathname }: { pathname: string }) {
+function NavLinks({
+  pathname,
+  orientation = "desktop",
+}: {
+  pathname: string;
+  orientation?: "desktop" | "mobile";
+}) {
   return (
     <nav aria-label="Main navigation">
-      <ul className="flex list-none flex-col items-stretch gap-1">
+      <ul
+        className={cn(
+          "flex list-none",
+          orientation === "desktop"
+            ? "items-center gap-1"
+            : "flex-col items-stretch gap-1"
+        )}
+      >
         {NAV_ITEMS.map((item) => {
           const active = isLinkActive(item.href, pathname);
           return (
@@ -83,10 +93,11 @@ function NavLinks({ pathname }: { pathname: string }) {
               <Link
                 href={item.href}
                 className={cn(
-                  "block rounded-full px-3 py-2 text-sm font-medium transition-colors",
+                  "block rounded-full px-4 py-2 text-sm font-medium transition-colors",
                   active
                     ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                  orientation === "mobile" && "px-3"
                 )}
               >
                 {item.label}
@@ -130,12 +141,12 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
-        {/* Sidebar toggle + brand. The nav links themselves now live in the
-            left menubar (SiteSidebar); the trigger only shows where the
-            sidebar does (≥768px). */}
-        <div className="flex items-center gap-1">
-          <SidebarTrigger className="hidden md:inline-flex" />
-          <SiteLogo />
+        {/* Logo & Brand Name */}
+        <SiteLogo />
+
+        {/* Public navigation items */}
+        <div className="hidden lg:block">
+          <NavLinks pathname={pathname} />
         </div>
 
         {/* Right side: auth state */}
@@ -210,7 +221,7 @@ export function SiteHeader() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="md:hidden"
+                  className="lg:hidden"
                   aria-label="Open navigation menu"
                 />
               }
@@ -224,7 +235,7 @@ export function SiteHeader() {
                 </SheetTitle>
               </SheetHeader>
               <div className="flex flex-col gap-6 px-4 pb-6">
-                <NavLinks pathname={pathname} />
+                <NavLinks pathname={pathname} orientation="mobile" />
                 <Separator />
                 {user ? (
                   <div className="flex flex-col gap-3">

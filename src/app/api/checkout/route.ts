@@ -41,13 +41,43 @@ export async function POST(req: Request) {
       process.env.BETTER_AUTH_URL ??
       "http://localhost:3000";
 
-    const checkout = await stripe.checkout.sessions.create({
-      mode: "payment",
-      customer_email: session.user.email ?? undefined,
-      client_reference_id: planKey,
-      line_items: priceId
-        ? [{ price: priceId, quantity: 1 }]
-        : [
+    let checkout;
+    try {
+      checkout = await stripe.checkout.sessions.create({
+        mode: "payment",
+        customer_email: session.user.email ?? undefined,
+        client_reference_id: planKey,
+        line_items: priceId
+          ? [{ price: priceId, quantity: 1 }]
+          : [
+              {
+                quantity: 1,
+                price_data: {
+                  currency: plan.currency,
+                  unit_amount: plan.amount,
+                  product_data: {
+                    name: `MentorLagbe ${plan.name}`,
+                    description: plan.tagline,
+                  },
+                },
+              },
+            ],
+        success_url: `${origin}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/payment/cancel`,
+        metadata: {
+          plan: planKey,
+          userEmail: session.user.email ?? "",
+          userId: session.user.id ?? "",
+        },
+      });
+    } catch (createErr) {
+      if (priceId) {
+        console.warn("[checkout] priceId create failed, falling back to dynamic price_data:", createErr);
+        checkout = await stripe.checkout.sessions.create({
+          mode: "payment",
+          customer_email: session.user.email ?? undefined,
+          client_reference_id: planKey,
+          line_items: [
             {
               quantity: 1,
               price_data: {
@@ -60,20 +90,25 @@ export async function POST(req: Request) {
               },
             },
           ],
-      success_url: `${origin}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/payment/cancel`,
-      metadata: {
-        plan: planKey,
-        userEmail: session.user.email ?? "",
-        userId: session.user.id ?? "",
-      },
-    });
+          success_url: `${origin}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${origin}/payment/cancel`,
+          metadata: {
+            plan: planKey,
+            userEmail: session.user.email ?? "",
+            userId: session.user.id ?? "",
+          },
+        });
+      } else {
+        throw createErr;
+      }
+    }
 
     return NextResponse.json({ url: checkout.url });
   } catch (error) {
     console.error("[checkout] failed to create session:", error);
+    const message = error instanceof Error ? error.message : "Could not start checkout. Please try again.";
     return NextResponse.json(
-      { error: "checkout-failed", message: "Could not start checkout. Please try again." },
+      { error: "checkout-failed", message },
       { status: 502 }
     );
   }

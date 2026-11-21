@@ -1,10 +1,5 @@
-import { LoadingSpinner } from "@/components/loading-spinner";
+import { DashboardStudentSkeleton } from "@/components/skeleton-loader";
 
 export default function Loading() {
-  return (
-    <LoadingSpinner
-      label="Loading your applications…"
-      className="min-h-[30vh]"
-    />
-  );
+  return <DashboardStudentSkeleton />;
 }

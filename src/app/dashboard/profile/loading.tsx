@@ -1,5 +1,11 @@
-import { LoadingSpinner } from "@/components/loading-spinner";
+import { DashboardFormSkeleton } from "@/components/skeleton-loader";
 
 export default function Loading() {
-  return <LoadingSpinner label="Loading profile…" className="min-h-[30vh]" />;
+  return (
+    <DashboardFormSkeleton
+      title="Profile"
+      subtitle="Loading your account profile and details..."
+      showAvatar={true}
+    />
+  );
 }

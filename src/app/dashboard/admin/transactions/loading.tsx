@@ -1,7 +1,12 @@
-import { LoadingSpinner } from "@/components/loading-spinner";
+import { DashboardTableSkeleton } from "@/components/skeleton-loader";
 
 export default function Loading() {
   return (
-    <LoadingSpinner label="Loading transactions…" className="min-h-[30vh]" />
+    <DashboardTableSkeleton
+      title="Transaction Management"
+      subtitle="Loading subscription transactions and platform revenue history..."
+      rows={6}
+      columns={5}
+    />
   );
 }

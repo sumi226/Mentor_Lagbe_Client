@@ -1,10 +1,5 @@
-import { LoadingSpinner } from "@/components/loading-spinner";
+import { DashboardTutorSkeleton } from "@/components/skeleton-loader";
 
 export default function Loading() {
-  return (
-    <LoadingSpinner
-      label="Loading your tuition posts…"
-      className="min-h-[30vh]"
-    />
-  );
+  return <DashboardTutorSkeleton />;
 }

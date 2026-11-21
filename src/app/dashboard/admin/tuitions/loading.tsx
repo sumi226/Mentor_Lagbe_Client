@@ -1,7 +1,12 @@
-import { LoadingSpinner } from "@/components/loading-spinner";
+import { DashboardTableSkeleton } from "@/components/skeleton-loader";
 
 export default function Loading() {
   return (
-    <LoadingSpinner label="Loading tuition posts…" className="min-h-[30vh]" />
+    <DashboardTableSkeleton
+      title="Admin Tuition Approvals"
+      subtitle="Loading pending and approved tuition posts for moderation..."
+      rows={6}
+      columns={6}
+    />
   );
 }

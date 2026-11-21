@@ -1,5 +1,5 @@
-import { LoadingSpinner } from "@/components/loading-spinner";
+import { TuitionDetailSkeleton } from "@/components/skeleton-loader";
 
 export default function Loading() {
-  return <LoadingSpinner label="Loading tuition details…" />;
+  return <TuitionDetailSkeleton />;
 }

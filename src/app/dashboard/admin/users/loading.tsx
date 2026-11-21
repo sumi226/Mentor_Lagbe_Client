@@ -1,5 +1,12 @@
-import { LoadingSpinner } from "@/components/loading-spinner";
+import { DashboardTableSkeleton } from "@/components/skeleton-loader";
 
 export default function Loading() {
-  return <LoadingSpinner label="Loading users…" className="min-h-[30vh]" />;
+  return (
+    <DashboardTableSkeleton
+      title="User Management"
+      subtitle="Loading all registered student, tutor, and admin accounts..."
+      rows={6}
+      columns={5}
+    />
+  );
 }

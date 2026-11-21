@@ -1,10 +1,5 @@
-import { LoadingSpinner } from "@/components/loading-spinner";
+import { DashboardAdminSkeleton } from "@/components/skeleton-loader";
 
 export default function Loading() {
-  return (
-    <LoadingSpinner
-      label="Loading admin overview…"
-      className="min-h-[30vh]"
-    />
-  );
+  return <DashboardAdminSkeleton />;
 }

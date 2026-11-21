@@ -7,6 +7,8 @@ import {
   Crown,
   Send,
   Clock,
+  Sparkles,
+  Search,
 } from "lucide-react";
 
 import { getSessionUser } from "@/lib/session";
@@ -48,7 +50,8 @@ export default async function StudentDashboardPage() {
     appliedAt: doc.appliedAt instanceof Date ? doc.appliedAt : new Date(),
   }));
 
-  const plan = String(planDoc?.plan ?? "free") === "pro" ? "Pro" : "Free";
+  const isPro = String(planDoc?.plan ?? "free") === "pro";
+  const plan = isPro ? "Pro" : "Free";
 
   const stats = {
     total: applications.length,
@@ -62,13 +65,25 @@ export default async function StudentDashboardPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Student Dashboard</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Track the tuition applications you&apos;ve sent to tutors.
+            Overview of your tuition applications, status tracking and current subscription.
           </p>
         </div>
-        <Button render={<Link href="/tuitions" />}>
-          Browse Tuitions
-          <ArrowRight className="size-4" />
-        </Button>
+        <div className="flex items-center gap-2">
+          {!isPro && (
+            <Button
+              variant="outline"
+              className="border-amber-500/30 text-amber-600 hover:bg-amber-500/10"
+              render={<Link href="/pricing" />}
+            >
+              <Crown className="size-4 mr-1 text-amber-500" />
+              Upgrade to Pro ($10)
+            </Button>
+          )}
+          <Button render={<Link href="/tuitions" />}>
+            <Search className="size-4" />
+            Browse Tuitions
+          </Button>
+        </div>
       </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -76,11 +91,13 @@ export default async function StudentDashboardPage() {
           icon={Send}
           label="Total Applied Tuitions"
           value={stats.total}
+          hint="All submitted applications"
         />
         <StatCard
           icon={CheckCircle2}
           label="Accepted Applications"
           value={stats.accepted}
+          hint="Tutors ready to teach"
         />
         <StatCard
           icon={Clock}
@@ -90,21 +107,32 @@ export default async function StudentDashboardPage() {
         />
         <StatCard
           icon={Crown}
-          label="Your Plan"
+          label="Current Plan"
           value={plan}
           hint={
             plan === "Free"
-              ? "Upgrade for unlimited applications"
-              : "Unlimited applications unlocked"
+              ? "Upgrade for priority booking"
+              : "Priority booking unlocked"
           }
         />
       </div>
 
-      <DashboardSection title="My Applications">
+      <DashboardSection
+        title="Recent Applications"
+        action={
+          <Link
+            href="/dashboard/student/my-applications"
+            className="text-sm font-medium text-primary flex items-center gap-1 hover:underline"
+          >
+            View All Applications
+            <ArrowRight className="size-3.5" />
+          </Link>
+        }
+      >
         {applications.length === 0 ? (
           <EmptyState
             title="No applications yet"
-            description="Find a tuition you like and send your first application."
+            description="Find a tuition batch that matches your subjects and send your first application."
             action={
               <Button render={<Link href="/tuitions" />}>
                 Browse Tuitions
@@ -114,7 +142,7 @@ export default async function StudentDashboardPage() {
           />
         ) : (
           <ul className="space-y-3">
-            {applications.map((app) => (
+            {applications.slice(0, 5).map((app) => (
               <li
                 key={app.id}
                 className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm"

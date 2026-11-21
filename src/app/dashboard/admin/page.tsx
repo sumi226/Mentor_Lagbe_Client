@@ -9,7 +9,6 @@ import {
   Crown,
   CreditCard,
   FileText,
-  Inbox,
   ShieldCheck,
   Users,
 } from "lucide-react";
@@ -43,7 +42,6 @@ export default async function AdminDashboardPage() {
     pendingCount,
     totalTuitions,
     approvedTuitions,
-    applicationsCount,
     totalUsers,
     totalTutors,
     revenueAgg,
@@ -54,12 +52,11 @@ export default async function AdminDashboardPage() {
       .collection("tuitions")
       .find({ approvalStatus: "pending" })
       .sort({ createdAt: -1 })
-      .limit(20)
+      .limit(10)
       .toArray(),
     db.collection("tuitions").countDocuments({ approvalStatus: "pending" }),
     db.collection("tuitions").countDocuments(),
     db.collection("tuitions").countDocuments({ approvalStatus: "approved" }),
-    db.collection("applications").countDocuments(),
     db.collection("users").countDocuments(),
     db.collection("users").countDocuments({ role: "tutor" }),
     db
@@ -74,7 +71,7 @@ export default async function AdminDashboardPage() {
       .collection("applications")
       .find({})
       .sort({ appliedAt: -1 })
-      .limit(10)
+      .limit(6)
       .toArray(),
   ]);
 
@@ -89,8 +86,8 @@ export default async function AdminDashboardPage() {
     tutorEmail: String(doc.tutorEmail ?? ""),
     mode: String(doc.mode ?? ""),
     monthlyFee: Number(doc.monthlyFee ?? 0),
-    createdAt:
-      doc.createdAt instanceof Date ? doc.createdAt : new Date(),
+    approvalStatus: String(doc.approvalStatus ?? "pending"),
+    createdAt: doc.createdAt instanceof Date ? doc.createdAt : new Date(),
   }));
 
   const recent = recentDocs.map((doc) => ({
@@ -110,20 +107,20 @@ export default async function AdminDashboardPage() {
   const subPages = [
     {
       href: "/dashboard/admin/users",
-      title: "Users",
-      description: "Change student, tutor and admin roles.",
+      title: "User Management",
+      description: "Manage registered users & assign student/tutor/admin roles.",
       icon: Users,
     },
     {
       href: "/dashboard/admin/tuitions",
-      title: "Tuitions",
-      description: "Review every listing — approve or reject.",
+      title: "Admin Tuition Approvals",
+      description: "Review all tuition listings — Approve or Reject any listing.",
       icon: ClipboardList,
     },
     {
       href: "/dashboard/admin/transactions",
-      title: "Transactions",
-      description: "Stripe revenue and payment history.",
+      title: "Transaction Management",
+      description: "Track all Stripe subscriptions and platform revenue.",
       icon: CreditCard,
     },
   ];
@@ -132,43 +129,41 @@ export default async function AdminDashboardPage() {
     <div>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Admin Dashboard</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Admin Dashboard Overview</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Manage users, tuition approvals and platform revenue.
+            Platform statistics, user management, and pending tuition approvals.
           </p>
         </div>
         <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
           <ShieldCheck className="size-3.5" aria-hidden="true" />
-          Administrator
+          Platform Administrator
         </span>
       </div>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <StatCard icon={Users} label="Total Users" value={totalUsers} />
-        <StatCard icon={Crown} label="Total Tutors" value={totalTutors} />
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          icon={FileText}
-          label="Pending Tuitions"
-          value={pendingCount}
-          hint="Awaiting your review"
+          icon={Users}
+          label="Total Users"
+          value={totalUsers}
+          hint="All registered accounts"
         />
         <StatCard
-          icon={CheckCircle2}
-          label="Approved Tuitions"
-          value={approvedTuitions}
-          hint={`of ${totalTuitions} total listings`}
+          icon={Crown}
+          label="Total Tutors"
+          value={totalTutors}
+          hint="Registered tutor accounts"
+        />
+        <StatCard
+          icon={FileText}
+          label="Pending vs. Approved"
+          value={`${pendingCount} / ${approvedTuitions}`}
+          hint={`${pendingCount} pending, ${approvedTuitions} approved (of ${totalTuitions})`}
         />
         <StatCard
           icon={Banknote}
           label="Total Stripe Revenue"
           value={formatCents(revenueCents)}
-          hint="Completed payments only"
-        />
-        <StatCard
-          icon={Inbox}
-          label="Applications"
-          value={applicationsCount}
-          hint={`${paymentsCount} payment transaction${paymentsCount === 1 ? "" : "s"}`}
+          hint={`${paymentsCount} completed transactions`}
         />
       </div>
 
@@ -200,13 +195,13 @@ export default async function AdminDashboardPage() {
       </div>
 
       <DashboardSection
-        title="Pending Approvals"
+        title="Pending Tuition Approvals"
         action={
           <Link
             href="/dashboard/admin/tuitions"
             className="text-sm font-medium text-primary underline-offset-4 hover:underline"
           >
-            View all
+            View All ({pendingCount})
           </Link>
         }
       >
@@ -233,7 +228,7 @@ export default async function AdminDashboardPage() {
                     {formatDistanceToNow(tuition.createdAt, { addSuffix: true })}
                   </p>
                 </div>
-                <TuitionApproval id={tuition.id} />
+                <TuitionApproval id={tuition.id} currentStatus={tuition.approvalStatus} />
               </li>
             ))}
           </ul>
@@ -241,10 +236,10 @@ export default async function AdminDashboardPage() {
       </DashboardSection>
 
       <DashboardSection
-        title="Recent Applications"
+        title="Recent Applications Across Platform"
         action={
           <span className="text-sm text-muted-foreground">
-            {applicationsCount} total
+            Latest student inquiries
           </span>
         }
       >
@@ -277,17 +272,6 @@ export default async function AdminDashboardPage() {
           </ul>
         )}
       </DashboardSection>
-
-      <p className={cn("mt-8 text-sm text-muted-foreground")}>
-        Browse the{" "}
-        <Link
-          href="/tuitions"
-          className="font-medium text-primary underline-offset-4 hover:underline"
-        >
-          public tuition listings
-        </Link>{" "}
-        to see what students view after approval.
-      </p>
     </div>
   );
 }

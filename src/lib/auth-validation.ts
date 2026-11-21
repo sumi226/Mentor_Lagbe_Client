@@ -33,8 +33,8 @@ export function validateSignUp(input: SignUpInput): string | null {
   if (input.password.length < MIN_PASSWORD_LENGTH) {
     return `Your password must be at least ${MIN_PASSWORD_LENGTH} characters long.`;
   }
-  if (input.role !== "student" && input.role !== "tutor") {
-    return "Please choose whether you are joining as a Student or a Tutor.";
+  if (input.role !== "student" && input.role !== "tutor" && input.role !== "admin") {
+    return "Please choose whether you are joining as a Student, Tutor, or Admin.";
   }
   return null;
 }

@@ -10,10 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { BookOpen, CheckCircle2, LoaderCircle, Presentation } from "lucide-react";
+import { BookOpen, CheckCircle2, LoaderCircle, Presentation, ShieldCheck } from "lucide-react";
 
 const ROLE_OPTIONS: {
-  value: Exclude<UserRole, "admin">;
+  value: UserRole;
   label: string;
   description: string;
   icon: typeof BookOpen;
@@ -21,14 +21,20 @@ const ROLE_OPTIONS: {
   {
     value: "student",
     label: "Student",
-    description: "Find tutors, apply for batches, and book 1-on-1 sessions.",
+    description: "Find tutors, apply for batches, and book sessions.",
     icon: BookOpen,
   },
   {
     value: "tutor",
     label: "Tutor",
-    description: "Post tuition batches and manage incoming applications.",
+    description: "Post tuition batches and manage applications.",
     icon: Presentation,
+  },
+  {
+    value: "admin",
+    label: "Admin",
+    description: "Manage users, review tuitions, and platform activity.",
+    icon: ShieldCheck,
   },
 ];
 
@@ -37,7 +43,7 @@ export function RegisterForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<Exclude<UserRole, "admin">>("student");
+  const [role, setRole] = useState<UserRole>("student");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -101,7 +107,7 @@ export function RegisterForm() {
       {/* Role picker */}
       <div className="flex flex-col gap-1.5">
         <Label>I want to join as</Label>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           {ROLE_OPTIONS.map((option) => {
             const selected = role === option.value;
             const Icon = option.icon;

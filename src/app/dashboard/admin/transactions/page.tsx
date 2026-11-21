@@ -15,7 +15,7 @@ export const metadata = { title: "Transactions · Admin" };
 
 function formatAmount(cents: number, currency: string) {
   const symbol = currency === "usd" ? "$" : "";
-  return `${symbol}${(cents / 100).toFixed(2)} ${currency.toUpperCase()}`;
+  return `${symbol}${(cents / 100).toFixed(2)}`;
 }
 
 export default async function AdminTransactionsPage() {
@@ -45,15 +45,13 @@ export default async function AdminTransactionsPage() {
   const payments = docs.map((doc) => ({
     id: String(doc._id),
     userEmail: String(doc.userEmail ?? ""),
-    userName: String(doc.userName ?? ""),
-    userRole: String(doc.userRole ?? ""),
+    userName: String(doc.userName ?? "N/A"),
+    userRole: String(doc.userRole ?? "user"),
     transactionId: String(doc.transactionId ?? doc.stripeSessionId ?? ""),
     planName: String(doc.planName ?? doc.plan ?? "Pro"),
     amount: Number(doc.amount ?? 0),
     currency: String(doc.currency ?? "usd"),
     status: String(doc.paymentStatus ?? doc.status ?? "paid"),
-    // Paid At: written by /api/checkout/verify when Stripe confirms the
-    // session; older records fall back to their legacy date fields.
     paidAt:
       doc.paidAt instanceof Date
         ? doc.paidAt
@@ -71,9 +69,9 @@ export default async function AdminTransactionsPage() {
     <div>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Transactions</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Transaction Management</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Every Stripe payment on MentorLagbe, newest first.
+            Display all Stripe subscription payment records from the payments collection.
           </p>
         </div>
         <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
@@ -89,44 +87,62 @@ export default async function AdminTransactionsPage() {
           value={`$${(revenueCents / 100).toFixed(2)}`}
           hint="Completed payments only"
         />
-        <StatCard icon={CreditCard} label="Transactions" value={payments.length} />
+        <StatCard icon={CreditCard} label="Total Transactions" value={payments.length} />
         <StatCard icon={Banknote} label="Paid" value={paidCount} />
-        <StatCard icon={Inbox} label="Pending" value={pendingCount} />
+        <StatCard icon={Inbox} label="Pending / Other" value={pendingCount} />
       </div>
 
-      <DashboardSection title="Payment History">
+      <DashboardSection title="Payment Records">
         {payments.length === 0 ? (
           <EmptyState
             title="No transactions yet"
-            description="Stripe isn't configured yet — add STRIPE_SECRET_KEY to .env.local, then completed checkouts will be recorded here."
+            description="When users subscribe to Pro plans via Stripe Checkout, payment records will appear here."
           />
         ) : (
-          <ul className="space-y-3">
-            {payments.map((payment) => (
-              <li
-                key={payment.id}
-                className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm"
-              >
-                <div className="min-w-0">
-                  <p className="truncate font-semibold" title={payment.transactionId || undefined}>
-                    {payment.planName}
-                  </p>
-                  <p className="mt-0.5 truncate text-sm text-muted-foreground">
-                    {payment.userName ? `${payment.userName} · ` : ""}
-                    {payment.userRole ? `${payment.userRole} · ` : ""}
-                    {payment.userEmail} ·{" "}
-                    {format(payment.paidAt, "dd MMM yyyy, HH:mm")}
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="font-semibold tabular-nums">
-                    {formatAmount(payment.amount, payment.currency)}
-                  </span>
-                  <StatusBadge status={payment.status} />
-                </div>
-              </li>
-            ))}
-          </ul>
+          <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="border-b border-border bg-muted/50 text-xs font-semibold uppercase text-muted-foreground">
+                  <tr>
+                    <th scope="col" className="px-4 py-3.5">User Name</th>
+                    <th scope="col" className="px-4 py-3.5">Email</th>
+                    <th scope="col" className="px-4 py-3.5">Role</th>
+                    <th scope="col" className="px-4 py-3.5">Plan Name</th>
+                    <th scope="col" className="px-4 py-3.5">Amount</th>
+                    <th scope="col" className="px-4 py-3.5">Transaction ID</th>
+                    <th scope="col" className="px-4 py-3.5">Payment Date</th>
+                    <th scope="col" className="px-4 py-3.5">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {payments.map((p) => (
+                    <tr key={p.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-3.5 font-medium text-foreground">{p.userName}</td>
+                      <td className="px-4 py-3.5 text-muted-foreground">{p.userEmail}</td>
+                      <td className="px-4 py-3.5">
+                        <span className="capitalize font-medium text-xs px-2 py-0.5 rounded-full border border-border bg-muted">
+                          {p.userRole}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3.5 font-semibold text-primary">{p.planName}</td>
+                      <td className="px-4 py-3.5 font-bold tabular-nums">
+                        {formatAmount(p.amount, p.currency)}
+                      </td>
+                      <td className="px-4 py-3.5 font-mono text-xs text-muted-foreground max-w-[140px] truncate" title={p.transactionId}>
+                        {p.transactionId || "—"}
+                      </td>
+                      <td className="px-4 py-3.5 text-muted-foreground whitespace-nowrap">
+                        {format(p.paidAt, "dd MMM yyyy, HH:mm")}
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <StatusBadge status={p.status} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
       </DashboardSection>
     </div>

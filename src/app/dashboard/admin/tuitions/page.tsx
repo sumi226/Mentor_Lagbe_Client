@@ -66,9 +66,9 @@ export default async function AdminTuitionsPage({
     <div>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Tuitions</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Admin Tuition Approval Flow</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Approve or reject every tuition post on the platform.
+            Display and review all tuition posts submitted by tutors. Admin can Approve or Reject any listing.
           </p>
         </div>
         <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
@@ -131,7 +131,7 @@ export default async function AdminTuitionsPage({
                     {formatDistanceToNow(tuition.createdAt, { addSuffix: true })}
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <StatusBadge status={tuition.approvalStatus} />
                   <span
                     className={
@@ -151,9 +151,7 @@ export default async function AdminTuitionsPage({
                       View
                     </Link>
                   ) : null}
-                  {tuition.approvalStatus === "pending" ? (
-                    <TuitionApproval id={tuition.id} />
-                  ) : null}
+                  <TuitionApproval id={tuition.id} currentStatus={tuition.approvalStatus} />
                 </div>
               </li>
             ))}

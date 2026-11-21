@@ -9,6 +9,7 @@ export default function SignInPage() {
     <AuthShell
       title="Welcome back"
       subtitle="Sign in to your MentorLagbe account."
+      className="max-w-md"
       imageSrc="/image/sign_in.jpg"
       imageAlt="A student wearing headphones taking notes beside a laptop"
       footer={

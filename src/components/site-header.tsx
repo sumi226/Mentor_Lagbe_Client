@@ -17,6 +17,7 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -44,18 +45,35 @@ import { useState } from "react";
 const NAV_ITEMS = [
   { href: "/", label: "Home" },
   { href: "/tuitions", label: "Browse Tuitions" },
-  { href: "/pricing", label: "Pricing" },
-  { href: "/how-it-works", label: "How It Works" },
+  { href: "/pricing", label: "Pricing / Pro Plans" },
+  { href: "/how-it-works", label: "How It Works / About" },
 ] as const;
 
 const ROLE_BADGE_STYLES: Record<string, string> = {
-  student: "bg-blue-100 text-blue-700 border-blue-200",
-  tutor: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  admin: "bg-rose-100 text-rose-700 border-rose-200",
+  student:
+    "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800",
+  tutor:
+    "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800",
+  admin:
+    "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800",
 };
 
+function formatRole(role?: string | null): "Student" | "Tutor" | "Admin" | string {
+  const r = (role ?? "student").toLowerCase();
+  if (r === "student") return "Student";
+  if (r === "tutor") return "Tutor";
+  if (r === "admin") return "Admin";
+  return r.charAt(0).toUpperCase() + r.slice(1);
+}
+
 function isLinkActive(href: string, pathname: string) {
-  return href === "/" ? pathname === "/" : pathname.startsWith(href);
+  if (href === "/") return pathname === "/";
+  if (href === "/how-it-works") {
+    return (
+      pathname.startsWith("/how-it-works") || pathname.startsWith("/about")
+    );
+  }
+  return pathname.startsWith(href);
 }
 
 function getInitials(name?: string | null) {
@@ -93,9 +111,9 @@ function NavLinks({
               <Link
                 href={item.href}
                 className={cn(
-                  "block rounded-full px-4 py-2 text-sm font-medium transition-colors",
+                  "block rounded-full px-3.5 py-2 text-sm font-medium transition-colors",
                   active
-                    ? "bg-primary/10 text-primary"
+                    ? "bg-primary/10 text-primary font-semibold"
                     : "text-muted-foreground hover:bg-accent hover:text-foreground",
                   orientation === "mobile" && "px-3"
                 )}
@@ -110,14 +128,20 @@ function NavLinks({
   );
 }
 
-function RoleBadge({ role }: { role?: string | null }) {
-  const value = role ?? "student";
+function RoleBadge({
+  role,
+  className,
+}: {
+  role?: string | null;
+  className?: string;
+}) {
+  const value = (role ?? "student").toLowerCase();
   return (
     <Badge
       variant="outline"
-      className={cn("hidden capitalize sm:inline-flex", ROLE_BADGE_STYLES[value])}
+      className={cn("font-medium", ROLE_BADGE_STYLES[value], className)}
     >
-      {value}
+      {formatRole(value)}
     </Badge>
   );
 }
@@ -140,7 +164,7 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
         {/* Logo & Brand Name */}
         <SiteLogo />
 
@@ -157,64 +181,80 @@ export function SiteHeader() {
               <div className="hidden h-4 w-20 animate-pulse rounded bg-muted sm:block" />
             </div>
           ) : user ? (
-            <>
-              {/* Authenticated state: avatar + name + role badge dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger
-                  className="flex items-center gap-2 rounded-full border bg-background py-1 pr-2 pl-1 shadow-sm transition-colors hover:bg-accent"
-                  aria-label="Open user menu"
-                >
-                  <Avatar className="size-8">
-                    {user.image ? (
-                      <AvatarImage src={user.image} alt={user.name} />
-                    ) : null}
-                    <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">
-                      {getInitials(user.name)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="hidden max-w-28 truncate text-sm font-medium md:inline-block">
-                    {user.name}
-                  </span>
-                  <RoleBadge role={user.role} />
-                  <ChevronDown className="size-4 text-muted-foreground" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>
-                    <p className="text-sm font-medium text-foreground">
-                      {user.name}
-                    </p>
-                    <p className="truncate text-xs font-normal text-muted-foreground">
-                      {user.email}
-                    </p>
-                  </DropdownMenuLabel>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                className="flex items-center gap-2 rounded-full border bg-background py-1 pr-2.5 pl-1.5 shadow-sm transition-colors hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring"
+                aria-label="Open user menu"
+              >
+                <Avatar className="size-8">
+                  {user.image ? (
+                    <AvatarImage src={user.image} alt={user.name} />
+                  ) : null}
+                  <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">
+                    {getInitials(user.name)}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="hidden max-w-28 truncate text-sm font-medium sm:inline-block">
+                  {user.name}
+                </span>
+                <RoleBadge role={user.role} className="hidden sm:inline-flex" />
+                <ChevronDown className="size-4 text-muted-foreground" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-60">
+                  {/* Base UI renders the label as Menu.GroupLabel, which
+                      requires a Menu.Group context — without this wrapper
+                      opening the menu throws "MenuGroupContext is missing". */}
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="truncate text-sm font-semibold text-foreground">
+                          {user.name}
+                        </p>
+                        <RoleBadge role={user.role} />
+                      </div>
+                      <p className="truncate text-xs font-normal text-muted-foreground mt-0.5">
+                        {user.email}
+                      </p>
+                    </DropdownMenuLabel>
+                  </DropdownMenuGroup>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem render={<Link href="/dashboard" />}>
-                    <LayoutDashboard />
+                    <LayoutDashboard className="size-4" />
                     Dashboard
                   </DropdownMenuItem>
                   <DropdownMenuItem render={<Link href="/dashboard/profile" />}>
-                    <UserRoundPen />
+                    <UserRoundPen className="size-4" />
                     Update Profile
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem variant="destructive" onClick={handleSignOut}>
-                    <LogOut />
+                    <LogOut className="size-4" />
                     Sign Out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            </>
           ) : (
             /* Unauthenticated state: Sign In / Sign Up */
-            <div className="hidden items-center gap-2 sm:flex">
-              <Button variant="ghost" render={<Link href="/sign-in" />}>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs sm:text-sm px-2.5 sm:px-4"
+                render={<Link href="/sign-in" />}
+              >
                 Sign In
               </Button>
-              <Button render={<Link href="/sign-up" />}>Sign Up</Button>
+              <Button
+                size="sm"
+                className="text-xs sm:text-sm px-3 sm:px-4"
+                render={<Link href="/sign-up" />}
+              >
+                Sign Up
+              </Button>
             </div>
           )}
 
-          {/* Mobile menu */}
+          {/* Mobile menu trigger */}
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger
               render={
@@ -250,9 +290,9 @@ export function SiteHeader() {
                       </Avatar>
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium">{user.name}</p>
-                        <p className="truncate text-xs text-muted-foreground">
-                          <span className="capitalize">{user.role ?? "student"}</span>
-                        </p>
+                        <div className="mt-1 flex items-center gap-1.5">
+                          <RoleBadge role={user.role} />
+                        </div>
                       </div>
                     </div>
                     <Button
@@ -261,7 +301,7 @@ export function SiteHeader() {
                         <Link href="/dashboard" onClick={closeMobileMenu} />
                       }
                     >
-                      <LayoutDashboard />
+                      <LayoutDashboard className="size-4" />
                       Dashboard
                     </Button>
                     <Button
@@ -273,11 +313,11 @@ export function SiteHeader() {
                         />
                       }
                     >
-                      <UserRoundPen />
+                      <UserRoundPen className="size-4" />
                       Update Profile
                     </Button>
                     <Button variant="destructive" onClick={handleSignOut}>
-                      <LogOut />
+                      <LogOut className="size-4" />
                       Sign Out
                     </Button>
                   </div>

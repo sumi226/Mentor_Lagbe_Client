@@ -8,7 +8,8 @@ export default function SignUpPage() {
   return (
     <AuthShell
       title="Create your account"
-      subtitle="Join MentorLagbe as a Student or a Tutor — it only takes a minute."
+      subtitle="Join MentorLagbe as a Student, Tutor, or Admin — it only takes a minute."
+      className="max-w-md"
       imageSrc="/image/sign_up.jpg"
       imageAlt="Students seated in a classroom listening to their teacher"
       footer={

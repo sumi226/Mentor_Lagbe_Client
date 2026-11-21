@@ -12,7 +12,7 @@ export function SiteLogo({ className }: { className?: string }) {
     <Link
       href="/"
       aria-label="MentorLagbe – go to home"
-      className={cn("inline-flex items-center", className)}
+      className={cn("inline-flex items-center gap-2", className)}
     >
       <Image
         src="/image/Logo.png"
@@ -22,6 +22,7 @@ export function SiteLogo({ className }: { className?: string }) {
         preload
         className="h-10 w-auto dark:rounded-xl dark:bg-white dark:px-2.5 dark:py-1.5"
       />
+      <span className="sr-only">MentorLagbe</span>
     </Link>
   );
 }

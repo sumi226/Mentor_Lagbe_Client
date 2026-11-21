@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
-import { Loader2, Save, UserRound } from "lucide-react";
+import { useState, useRef, type FormEvent } from "react";
+import { Loader2, Save, UploadCloud, UserRound, X } from "lucide-react";
 
 import { authClient } from "@/lib/auth-client";
 import { fetchAuthToken } from "@/lib/api-token";
@@ -40,10 +40,46 @@ export function ProfileForm({ initial }: { initial: Initial }) {
   const [phone, setPhone] = useState(initial.phone);
   const [bio, setBio] = useState(initial.bio);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;
   } | null>(null);
+
+  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    setMessage(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const res = await fetch("/api/upload/imgbb", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.url) {
+        throw new Error(data.error || "Failed to upload avatar to ImgBB");
+      }
+
+      setImage(data.url);
+      setMessage({ type: "success", text: "Profile picture uploaded via ImgBB!" });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Upload failed";
+      setMessage({ type: "error", text: msg });
+    } finally {
+      setUploadingImage(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -64,8 +100,6 @@ export function ProfileForm({ initial }: { initial: Initial }) {
         return;
       }
       setMessage({ type: "success", text: "Profile updated successfully." });
-      // The cached JWT still carries the old profile — mint a fresh one so
-      // protected API requests send the updated name / phone / bio.
       await fetchAuthToken(true);
       router.refresh();
     } catch {
@@ -80,30 +114,65 @@ export function ProfileForm({ initial }: { initial: Initial }) {
       onSubmit={handleSubmit}
       className="rounded-2xl border border-border bg-card p-6 shadow-sm"
     >
-      {/* Avatar preview */}
-      <div className="flex items-center gap-4">
+      {/* Avatar preview & ImgBB Upload */}
+      <div className="flex flex-wrap items-center gap-4">
         {image ? (
-          <Image
-            src={image}
-            alt="Avatar preview"
-            width={64}
-            height={64}
-            className="size-16 rounded-full border border-border object-cover"
-          />
+          <div className="relative">
+            <Image
+              src={image}
+              alt="Avatar preview"
+              width={72}
+              height={72}
+              className="size-18 rounded-full border border-border object-cover"
+            />
+            <button
+              type="button"
+              onClick={() => setImage("")}
+              className="absolute -top-1 -right-1 bg-destructive text-white rounded-full p-0.5 shadow hover:bg-destructive/90"
+              title="Remove avatar"
+            >
+              <X className="size-3.5" />
+            </button>
+          </div>
         ) : (
-          <span className="flex size-16 items-center justify-center rounded-full bg-primary/10 text-xl font-bold text-primary">
+          <span className="flex size-18 items-center justify-center rounded-full bg-primary/10 text-2xl font-bold text-primary">
             {getInitials(name)}
           </span>
         )}
-        <div>
-          <p className="font-semibold">{name || "Your name"}</p>
+        <div className="flex-1 min-w-[200px]">
+          <p className="font-semibold text-lg">{name || "Your name"}</p>
           <p className="text-sm capitalize text-muted-foreground">
             {initial.role} account
           </p>
+          <div className="mt-2 flex items-center gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleAvatarUpload}
+              disabled={uploadingImage}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingImage}
+              className="text-xs"
+            >
+              {uploadingImage ? (
+                <Loader2 className="size-3.5 animate-spin mr-1" />
+              ) : (
+                <UploadCloud className="size-3.5 mr-1" />
+              )}
+              {uploadingImage ? "Uploading to ImgBB…" : "Upload Photo (ImgBB)"}
+            </Button>
+          </div>
         </div>
       </div>
 
-      <div className="mt-5 space-y-4">
+      <div className="mt-6 space-y-4">
         <div className="grid gap-1.5">
           <Label htmlFor="profile-name">Full name</Label>
           <Input
@@ -129,7 +198,7 @@ export function ProfileForm({ initial }: { initial: Initial }) {
         </div>
 
         <div className="grid gap-1.5">
-          <Label htmlFor="profile-image">Avatar image URL</Label>
+          <Label htmlFor="profile-image">Avatar Image URL (or use ImgBB upload above)</Label>
           <Input
             id="profile-image"
             type="url"
@@ -138,7 +207,7 @@ export function ProfileForm({ initial }: { initial: Initial }) {
             placeholder="https://example.com/avatar.png"
           />
           <p className="text-xs text-muted-foreground">
-            Paste a direct image link, or leave it empty to use your initials.
+            Upload an image above via ImgBB API, paste a direct link, or leave empty.
           </p>
         </div>
 
@@ -181,7 +250,7 @@ export function ProfileForm({ initial }: { initial: Initial }) {
         </p>
       )}
 
-      <Button type="submit" disabled={saving} className="mt-5">
+      <Button type="submit" disabled={saving || uploadingImage} className="mt-5">
         {saving ? (
           <Loader2 className="size-4 animate-spin" />
         ) : (

@@ -1,13 +1,21 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
-import { ArrowRight, Crown, Inbox, Send, Users } from "lucide-react";
+import {
+  ArrowRight,
+  CheckCircle2,
+  Crown,
+  FilePlus,
+  Inbox,
+  Send,
+  Users,
+} from "lucide-react";
 
 import { getSessionUser } from "@/lib/session";
 import { client, db } from "@/lib/mongodb";
 import { ApplicationReview } from "@/components/application-review";
-import { PostTuitionButton } from "@/components/post-tuition-button";
 import { TuitionActions } from "@/components/tuition-actions";
+import { Button } from "@/components/ui/button";
 import {
   DashboardSection,
   EmptyState,
@@ -81,7 +89,7 @@ export default async function TutorDashboardPage() {
 
   const stats = {
     posted: tuitions.length,
-    live: tuitions.filter((t) => t.approvalStatus === "approved" && t.isActive)
+    activeApproved: tuitions.filter((t) => t.approvalStatus === "approved" && t.isActive)
       .length,
     applicants: applicants.length,
   };
@@ -92,34 +100,53 @@ export default async function TutorDashboardPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Tutor Dashboard</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Manage your tuition batches and review incoming student
-            applications.
+            Overview of your tuition postings, student applicants and current plan.
           </p>
         </div>
-        <PostTuitionButton />
+        <div className="flex items-center gap-2">
+          {!isPro && (
+            <Button
+              variant="outline"
+              className="border-amber-500/30 text-amber-600 hover:bg-amber-500/10"
+              render={<Link href="/pricing" />}
+            >
+              <Crown className="size-4 mr-1 text-amber-500" />
+              Upgrade to Pro ($15)
+            </Button>
+          )}
+          <Button render={<Link href="/dashboard/tutor/post-tuition" />}>
+            <FilePlus className="size-4" />
+            Post a Tuition
+          </Button>
+        </div>
       </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={Send} label="Batches Posted" value={stats.posted} />
         <StatCard
-          icon={ArrowRight}
-          label="Live on Browse Page"
-          value={stats.live}
-          hint="Approved & active listings"
+          icon={Send}
+          label="Total Tuitions Posted"
+          value={stats.posted}
+          hint="All your posted batches"
+        />
+        <StatCard
+          icon={CheckCircle2}
+          label="Active/Approved Tuitions"
+          value={stats.activeApproved}
+          hint="Live on browse page"
         />
         <StatCard
           icon={Inbox}
-          label="Applicants"
+          label="Total Applicants Received"
           value={stats.applicants}
-          hint="Students who applied to you"
+          hint="Incoming student applications"
         />
         <StatCard
           icon={Crown}
-          label="Your Plan"
+          label="Current Plan"
           value={isPro ? "Pro" : "Free"}
           hint={
             isPro
-              ? "Unlimited tuition posts"
+              ? "Unlimited tuition posts & verified badge"
               : `${Math.min(postsUsed, FREE_POST_LIMIT)} of ${FREE_POST_LIMIT} posts used`
           }
         />
@@ -138,20 +165,84 @@ export default async function TutorDashboardPage() {
           >
             Upgrade to Pro Tutor
           </Link>{" "}
-          for unlimited posts.
+          for unlimited posts and verified badge.
         </p>
       ) : null}
 
-      <DashboardSection title="My Tuitions">
+      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+        <Link
+          href="/dashboard/tutor/post-tuition"
+          className="group rounded-2xl border border-border bg-card p-5 shadow-sm transition-colors hover:border-primary/40 hover:bg-primary/5"
+        >
+          <span className="flex items-center justify-between">
+            <span className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
+              <FilePlus className="size-4 text-primary" aria-hidden="true" />
+            </span>
+            <ArrowRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+          </span>
+          <p className="mt-3 font-semibold">Post a Tuition</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Create a new tuition batch with ImgBB banner.
+          </p>
+        </Link>
+
+        <Link
+          href="/dashboard/tutor/my-tuitions"
+          className="group rounded-2xl border border-border bg-card p-5 shadow-sm transition-colors hover:border-primary/40 hover:bg-primary/5"
+        >
+          <span className="flex items-center justify-between">
+            <span className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
+              <Send className="size-4 text-primary" aria-hidden="true" />
+            </span>
+            <ArrowRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+          </span>
+          <p className="mt-3 font-semibold">My Created Tuitions</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Full CRUD: Edit, Delete, Toggle Active/Closed.
+          </p>
+        </Link>
+
+        <Link
+          href="/dashboard/tutor/applicants"
+          className="group rounded-2xl border border-border bg-card p-5 shadow-sm transition-colors hover:border-primary/40 hover:bg-primary/5"
+        >
+          <span className="flex items-center justify-between">
+            <span className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
+              <Users className="size-4 text-primary" aria-hidden="true" />
+            </span>
+            <ArrowRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+          </span>
+          <p className="mt-3 font-semibold">Manage Applicants</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Review student applicants and Accept or Reject.
+          </p>
+        </Link>
+      </div>
+
+      <DashboardSection
+        title="Recent Tuitions"
+        action={
+          <Link
+            href="/dashboard/tutor/my-tuitions"
+            className="text-sm font-medium text-primary hover:underline"
+          >
+            Manage All ({tuitions.length})
+          </Link>
+        }
+      >
         {tuitions.length === 0 ? (
           <EmptyState
             title="No batches posted yet"
             description="Post your first tuition batch — admins usually approve within 24–48 hours."
-            action={<PostTuitionButton />}
+            action={
+              <Button render={<Link href="/dashboard/tutor/post-tuition" />}>
+                Post a Tuition
+              </Button>
+            }
           />
         ) : (
           <ul className="space-y-3">
-            {tuitions.map((tuition) => (
+            {tuitions.slice(0, 4).map((tuition) => (
               <li
                 key={tuition.id}
                 className="rounded-2xl border border-border bg-card p-4 shadow-sm"
@@ -194,7 +285,17 @@ export default async function TutorDashboardPage() {
         )}
       </DashboardSection>
 
-      <DashboardSection title="Student Applicants">
+      <DashboardSection
+        title="Recent Applicants"
+        action={
+          <Link
+            href="/dashboard/tutor/applicants"
+            className="text-sm font-medium text-primary hover:underline"
+          >
+            View All ({applicants.length})
+          </Link>
+        }
+      >
         {applicants.length === 0 ? (
           <EmptyState
             title="No applicants yet"
@@ -202,7 +303,7 @@ export default async function TutorDashboardPage() {
           />
         ) : (
           <ul className="space-y-3">
-            {applicants.map((app) => (
+            {applicants.slice(0, 3).map((app) => (
               <li
                 key={app.id}
                 className="rounded-2xl border border-border bg-card p-4 shadow-sm"
@@ -227,44 +328,11 @@ export default async function TutorDashboardPage() {
                     <ApplicationReview id={app.id} status={app.status} />
                   </div>
                 </div>
-                <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
-                  {app.studentNote}
-                </p>
-                {(app.preferredSchedule || app.studentPhone) && (
-                  <p className="mt-1.5 text-xs text-muted-foreground">
-                    {app.preferredSchedule ? (
-                      <>
-                        Schedule:{" "}
-                        <span className="font-medium text-foreground">
-                          {app.preferredSchedule}
-                        </span>
-                      </>
-                    ) : null}
-                    {app.preferredSchedule && app.studentPhone ? " · " : null}
-                    {app.studentPhone ? (
-                      <>
-                        Phone:{" "}
-                        <span className="font-medium text-foreground">
-                          {app.studentPhone}
-                        </span>
-                      </>
-                    ) : null}
-                  </p>
-                )}
-                <p className="mt-2 text-xs text-muted-foreground">
-                  {formatDistanceToNow(app.appliedAt, { addSuffix: true })}
-                </p>
               </li>
             ))}
           </ul>
         )}
       </DashboardSection>
-
-      <p className="mt-8 flex items-center gap-2 text-sm text-muted-foreground">
-        <Users className="size-4 text-primary" aria-hidden="true" />
-        Tip: keep your descriptions detailed — complete batches get approved
-        faster.
-      </p>
     </div>
   );
 }

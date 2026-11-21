@@ -12,8 +12,8 @@ const HIDDEN_ON = ["/dashboard", "/sign-in", "/sign-up", "/payment"];
 const QUICK_LINKS = [
   { href: "/", label: "Home" },
   { href: "/tuitions", label: "Browse Tuitions" },
-  { href: "/pricing", label: "Pricing" },
-  { href: "/how-it-works", label: "How It Works" },
+  { href: "/pricing", label: "Pricing / Pro Plans" },
+  { href: "/how-it-works", label: "How It Works / About" },
 ];
 
 const ACCOUNT_LINKS = [

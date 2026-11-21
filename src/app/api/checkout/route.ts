@@ -6,11 +6,6 @@ import { FREE_FEATURES, PRO_PLANS, type PlanKey } from "@/lib/plans";
 
 /**
  * Creates a Stripe Checkout Session for a Pro subscription.
- *
- * Graceful fallback: when STRIPE_SECRET_KEY is not configured yet, responds
- * 503 with a friendly message the UI shows to the user instead of failing
- * silently. Add STRIPE_SECRET_KEY (and optionally STRIPE_PRICE_ID_STUDENT /
- * STRIPE_PRICE_ID_TUTOR) to .env.local to enable live payments.
  */
 export async function POST(req: Request) {
   try {
@@ -70,13 +65,11 @@ export async function POST(req: Request) {
       cancel_url: `${origin}/payment/cancel`,
       metadata: {
         plan: planKey,
-        features: FREE_FEATURES[planKey].length + plan.features.length,
+        userEmail: session.user.email ?? "",
+        userId: session.user.id ?? "",
+        features: String(FREE_FEATURES[planKey].length + plan.features.length),
       },
     });
-
-    // The payments record is NOT written here: per the spec it is inserted
-    // by session verification (/api/checkout/verify) once Stripe confirms
-    // the payment — see Step 6 of the collection workflow.
 
     return NextResponse.json({ url: checkout.url });
   } catch (error) {

@@ -7,8 +7,14 @@ import { getAuthHeaders } from "@/lib/api-token";
 
 import { Button } from "@/components/ui/button";
 
-/** Approve / reject buttons for pending listings (admin dashboard only). */
-export function TuitionApproval({ id }: { id: string }) {
+/** Approve / reject buttons for tuition listings (admin dashboard only). */
+export function TuitionApproval({
+  id,
+  currentStatus,
+}: {
+  id: string;
+  currentStatus?: string;
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState<"approve" | "reject" | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -37,32 +43,36 @@ export function TuitionApproval({ id }: { id: string }) {
 
   return (
     <div className="flex flex-col items-end gap-1.5">
-      <div className="flex gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Button
           size="sm"
           onClick={() => act("approve")}
-          disabled={busy !== null}
-          className="bg-emerald-600 text-white hover:bg-emerald-700"
+          disabled={busy !== null || currentStatus === "approved"}
+          className={
+            currentStatus === "approved"
+              ? "bg-emerald-600/50 text-white cursor-default"
+              : "bg-emerald-600 text-white hover:bg-emerald-700"
+          }
         >
           {busy === "approve" ? (
             <Loader2 className="size-3.5 animate-spin" />
           ) : (
             <Check className="size-3.5" />
           )}
-          Approve
+          {currentStatus === "approved" ? "Approved" : "Approve"}
         </Button>
         <Button
           size="sm"
-          variant="destructive"
+          variant={currentStatus === "rejected" ? "outline" : "destructive"}
           onClick={() => act("reject")}
-          disabled={busy !== null}
+          disabled={busy !== null || currentStatus === "rejected"}
         >
           {busy === "reject" ? (
             <Loader2 className="size-3.5 animate-spin" />
           ) : (
             <X className="size-3.5" />
           )}
-          Reject
+          {currentStatus === "rejected" ? "Rejected" : "Reject"}
         </Button>
       </div>
       {error && (

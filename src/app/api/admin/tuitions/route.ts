@@ -5,7 +5,7 @@ import { getAuthSession } from "@/lib/api-auth";
 import { client, db } from "@/lib/mongodb";
 
 /**
- * Admin-only: approve or reject a pending tuition listing.
+ * Admin-only: approve or reject any tuition listing.
  * Approving makes the listing live (isActive: true) on /tuitions.
  */
 export async function POST(req: Request) {
@@ -39,16 +39,16 @@ export async function POST(req: Request) {
     await client.connect();
     const update =
       action === "approve"
-        ? { approvalStatus: "approved", isActive: true }
-        : { approvalStatus: "rejected", isActive: false };
+        ? { approvalStatus: "approved", isActive: true, updatedAt: new Date() }
+        : { approvalStatus: "rejected", isActive: false, updatedAt: new Date() };
 
     const result = await db
       .collection("tuitions")
-      .updateOne({ _id: new ObjectId(id), approvalStatus: "pending" }, { $set: update });
+      .updateOne({ _id: new ObjectId(id) }, { $set: update });
 
     if (result.matchedCount === 0) {
       return NextResponse.json(
-        { error: "not-found", message: "This listing is no longer pending." },
+        { error: "not-found", message: "Tuition listing not found." },
         { status: 404 }
       );
     }

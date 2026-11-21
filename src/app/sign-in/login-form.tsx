@@ -36,6 +36,10 @@ export function LoginForm() {
 
     setLoading(true);
 
+    try {
+      await authClient.signOut();
+    } catch {}
+
     const { error: signInError } = await authClient.signIn.email({
       email: email.trim(),
       password,

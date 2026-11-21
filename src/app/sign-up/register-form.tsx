@@ -66,6 +66,10 @@ export function RegisterForm() {
 
     setLoading(true);
 
+    try {
+      await authClient.signOut();
+    } catch {}
+
     const { error: signUpError } = await authClient.signUp.email({
       name: name.trim(),
       email: email.trim(),
@@ -76,8 +80,14 @@ export function RegisterForm() {
     });
 
     if (signUpError) {
-      const message =
+      let message =
         signUpError.message ?? "Something went wrong. Please try again.";
+      if (
+        message.toLowerCase().includes("already exists") ||
+        signUpError.code === "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL"
+      ) {
+        message = "An account with this email already exists. Please sign in or use another email.";
+      }
       setError(message);
       toast.add({
         type: "error",

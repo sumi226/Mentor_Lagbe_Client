@@ -1,23 +1,34 @@
 import { MongoClient } from "mongodb";
 
-const uri =
-  process.env.MONGODB_URI ??
-  process.env.MONGODB_URL ??
-  "mongodb://localhost:27017";
+const FALLBACK_MONGODB_URI =
+  "mongodb+srv://mentor_lagbe:iQylN3NxWvUQtnmZ@cluster0.packzgp.mongodb.net/?compressors=zlib";
+
+function getMongoUri(): string {
+  const uri = process.env.MONGODB_URI || process.env.MONGODB_URL;
+  if (uri && !uri.includes("localhost")) {
+    return uri;
+  }
+  if (process.env.NODE_ENV === "production") {
+    return FALLBACK_MONGODB_URI;
+  }
+  return uri || "mongodb://localhost:27017";
+}
 
 /**
- * Reuse a single client across dev HMR reloads so we never open a new
- * connection pool per edit (Atlas has a finite connection limit).
- * The MongoClient constructor is lazy — connections open on first operation.
+ * Reuse a single client across serverless invocations and dev HMR reloads
+ * to prevent exhausting connection limits on MongoDB Atlas.
  */
 const globalForMongo = globalThis as typeof globalThis & {
   _mongoClient?: MongoClient;
 };
 
-export const client = globalForMongo._mongoClient ?? new MongoClient(uri);
-
-if (process.env.NODE_ENV !== "production") {
-  globalForMongo._mongoClient = client;
+if (!globalForMongo._mongoClient) {
+  globalForMongo._mongoClient = new MongoClient(getMongoUri(), {
+    maxPoolSize: 10,
+    serverSelectionTimeoutMS: 8000,
+  });
 }
+
+export const client = globalForMongo._mongoClient;
 
 export const db = client.db("mentor_lagbe");

@@ -1,10 +1,17 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getSessionUser } from "@/lib/session";
 import { AuthShell } from "@/components/auth-shell";
 import { RegisterForm } from "./register-form";
 
 export const metadata = { title: "Sign Up" };
 
-export default function SignUpPage() {
+export default async function SignUpPage() {
+  const user = await getSessionUser();
+  if (user) {
+    redirect("/dashboard");
+  }
+
   return (
     <AuthShell
       title="Create your account"

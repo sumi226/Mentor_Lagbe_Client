@@ -4,9 +4,8 @@ export default function Loading() {
   return (
     <DashboardTableSkeleton
       title="Admin Tuition Approvals"
-      subtitle="Loading pending and approved tuition posts for moderation..."
+      subtitle="Loading all submitted tuition listings…"
       rows={6}
-      columns={6}
     />
   );
 }

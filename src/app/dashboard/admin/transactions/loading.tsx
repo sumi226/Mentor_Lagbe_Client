@@ -4,9 +4,8 @@ export default function Loading() {
   return (
     <DashboardTableSkeleton
       title="Transaction Management"
-      subtitle="Loading subscription transactions and platform revenue history..."
+      subtitle="Loading Stripe payment records…"
       rows={6}
-      columns={5}
     />
   );
 }

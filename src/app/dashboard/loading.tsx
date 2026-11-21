@@ -1,5 +1,9 @@
-import { DashboardAdminSkeleton } from "@/components/skeleton-loader";
+import { SmoothSpinner } from "@/components/skeleton-loader";
 
 export default function Loading() {
-  return <DashboardAdminSkeleton />;
+  return (
+    <div className="flex min-h-[40vh] items-center justify-center">
+      <SmoothSpinner size="lg" label="Loading dashboard…" />
+    </div>
+  );
 }

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
 import { getAuthSession } from "@/lib/api-auth";
-import { FREE_FEATURES, PRO_PLANS, type PlanKey } from "@/lib/plans";
+import { PRO_PLANS, type PlanKey } from "@/lib/plans";
 
 /**
  * Creates a Stripe Checkout Session for a Pro subscription.
@@ -42,7 +42,7 @@ export async function POST(req: Request) {
       "http://localhost:3000";
 
     const checkout = await stripe.checkout.sessions.create({
-      mode: "subscription",
+      mode: "payment",
       customer_email: session.user.email ?? undefined,
       client_reference_id: planKey,
       line_items: priceId
@@ -53,7 +53,6 @@ export async function POST(req: Request) {
               price_data: {
                 currency: plan.currency,
                 unit_amount: plan.amount,
-                recurring: { interval: "month" },
                 product_data: {
                   name: `MentorLagbe ${plan.name}`,
                   description: plan.tagline,
@@ -67,7 +66,6 @@ export async function POST(req: Request) {
         plan: planKey,
         userEmail: session.user.email ?? "",
         userId: session.user.id ?? "",
-        features: String(FREE_FEATURES[planKey].length + plan.features.length),
       },
     });
 

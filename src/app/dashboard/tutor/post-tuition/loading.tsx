@@ -4,7 +4,7 @@ export default function Loading() {
   return (
     <DashboardFormSkeleton
       title="Post a Tuition"
-      subtitle="Preparing tuition posting form..."
+      subtitle="Preparing your tuition post form…"
     />
   );
 }

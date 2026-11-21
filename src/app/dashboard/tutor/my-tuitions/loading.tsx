@@ -3,10 +3,9 @@ import { DashboardTableSkeleton } from "@/components/skeleton-loader";
 export default function Loading() {
   return (
     <DashboardTableSkeleton
-      title="My Tuition Posts"
-      subtitle="Loading your published tuitions and student interest..."
+      title="My Created Tuitions"
+      subtitle="Loading your tuition posts…"
       rows={5}
-      columns={5}
     />
   );
 }

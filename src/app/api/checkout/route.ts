@@ -38,9 +38,16 @@ export async function POST(req: Request) {
 
     const origin =
       req.headers.get("origin") ??
-      process.env.BETTER_AUTH_URL ??
+      (process.env.BETTER_AUTH_URL && !process.env.BETTER_AUTH_URL.includes("localhost")
+        ? process.env.BETTER_AUTH_URL
+        : null) ??
+      (process.env.VERCEL_PROJECT_PRODUCTION_URL
+        ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+        : null) ??
       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ??
-      "http://localhost:3000";
+      (process.env.NODE_ENV === "production"
+        ? "https://mentor-lagbe-client-nine.vercel.app"
+        : "http://localhost:3000");
 
     let checkout;
     try {

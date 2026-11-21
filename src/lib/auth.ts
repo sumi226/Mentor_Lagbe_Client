@@ -6,8 +6,26 @@ import { client, db } from "@/lib/mongodb";
 
 export type UserRole = "student" | "tutor" | "admin";
 
+/**
+ * Resolve the canonical URL for better-auth.
+ * Priority: explicit BETTER_AUTH_URL > Vercel's auto-injected VERCEL_URL > localhost.
+ * VERCEL_URL does NOT include the scheme, so we prepend "https://".
+ */
+function resolveBaseURL(): string {
+  if (process.env.BETTER_AUTH_URL) return process.env.BETTER_AUTH_URL;
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return "http://localhost:3000";
+}
+
 export const auth = betterAuth({
-  baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
+  baseURL: resolveBaseURL(),
+  // Allow the Vercel deployment origin to pass better-auth's CSRF check.
+  // In production better-auth rejects requests whose Origin doesn't match
+  // the baseURL — trustedOrigins whitelists our Vercel domain.
+  trustedOrigins: [
+    process.env.BETTER_AUTH_URL,
+    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined,
+  ].filter(Boolean) as string[],
   // usePlural → better-auth stores its models in "users", "sessions" and
   // "accounts" collections so the database keeps the 4 app collections
   // (users, tuitions, applications, payments) with the names the app uses.

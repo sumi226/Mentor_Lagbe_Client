@@ -5,11 +5,14 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   images: {
     // Tuition banner images are hosted on Unsplash (see public/data.json);
-    // tutor avatars come from DiceBear (see public/data.json tutorAvatar).
+    // tutor avatars come from DiceBear (see public/data.json tutorAvatar);
+    // user-uploaded banners go through ImgBB.
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "plus.unsplash.com" },
       { protocol: "https", hostname: "api.dicebear.com" },
+      { protocol: "https", hostname: "i.ibb.co" },
+      { protocol: "https", hostname: "i.ibb.co.com" },
     ],
   },
   async redirects() {

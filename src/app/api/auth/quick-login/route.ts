@@ -2,25 +2,25 @@ import { NextResponse } from "next/server";
 import { client, db } from "@/lib/mongodb";
 import { auth } from "@/lib/auth";
 
-const DEMO_USERS = {
+const QUICK_USERS = {
   admin: {
     email: "admin@mentorlagbe.com",
-    name: "Admin Demo",
-    password: "DemoPassword123!",
+    name: "MentorLagbe Admin",
+    password: "MentorLagbe123!",
     role: "admin",
     plan: "pro",
   },
   tutor: {
     email: "tutor@mentorlagbe.com",
-    name: "Tutor Demo",
-    password: "DemoPassword123!",
+    name: "MentorLagbe Tutor",
+    password: "MentorLagbe123!",
     role: "tutor",
     plan: "free",
   },
   student: {
     email: "student@mentorlagbe.com",
-    name: "Student Demo",
-    password: "DemoPassword123!",
+    name: "MentorLagbe Student",
+    password: "MentorLagbe123!",
     role: "student",
     plan: "free",
   },
@@ -29,14 +29,14 @@ const DEMO_USERS = {
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
-    const role = (body.role ?? "student").toLowerCase() as keyof typeof DEMO_USERS;
-    const config = DEMO_USERS[role] ?? DEMO_USERS.student;
+    const role = (body.role ?? "student").toLowerCase() as keyof typeof QUICK_USERS;
+    const config = QUICK_USERS[role] ?? QUICK_USERS.student;
 
     await client.connect();
     const existing = await db.collection("users").findOne({ email: config.email });
 
     if (!existing) {
-      // Create user via BetterAuth
+      // Create account via BetterAuth
       try {
         await auth.api.signUpEmail({
           body: {
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
           },
         });
       } catch (e) {
-        console.warn("[demo-login] sign up error or existing:", e);
+        console.warn("[quick-login] account creation skipped (may already exist):", e);
       }
     }
 
@@ -64,7 +64,7 @@ export async function POST(req: Request) {
       role: config.role,
     });
   } catch (error) {
-    console.error("[demo-login] failed:", error);
-    return NextResponse.json({ error: "Failed to prepare demo login" }, { status: 500 });
+    console.error("[quick-login] failed:", error);
+    return NextResponse.json({ error: "Failed to prepare login" }, { status: 500 });
   }
 }

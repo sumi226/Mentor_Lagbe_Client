@@ -17,7 +17,7 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [demoLoading, setDemoLoading] = useState<"admin" | "tutor" | "student" | null>(null);
+  const [quickLoading, setQuickLoading] = useState<"admin" | "tutor" | "student" | null>(null);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -66,55 +66,55 @@ export function LoginForm() {
     router.refresh();
   };
 
-  const handleDemoLogin = async (role: "admin" | "tutor" | "student") => {
-    setDemoLoading(role);
+  const handleQuickLogin = async (role: "admin" | "tutor" | "student") => {
+    setQuickLoading(role);
     setError(null);
 
     try {
-      // 1. Ensure demo user exists in DB with correct password
-      const prepRes = await fetch("/api/auth/demo-login", {
+      // 1. Ensure account exists in DB with correct credentials
+      const prepRes = await fetch("/api/auth/quick-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ role }),
       });
       const prepData = await prepRes.json().catch(() => ({}));
 
-      const demoEmail = prepData.email || `${role}@mentorlagbe.com`;
-      const demoPass = prepData.password || "DemoPassword123!";
+      const loginEmail = prepData.email || `${role}@mentorlagbe.com`;
+      const loginPass = prepData.password || "MentorLagbe123!";
 
-      setEmail(demoEmail);
-      setPassword(demoPass);
+      setEmail(loginEmail);
+      setPassword(loginPass);
 
       // 2. Perform 1-click sign-in via better-auth
       const { error: signInError } = await authClient.signIn.email({
-        email: demoEmail,
-        password: demoPass,
+        email: loginEmail,
+        password: loginPass,
       });
 
       if (signInError) {
-        throw new Error(signInError.message || "Failed to sign in as demo user.");
+        throw new Error(signInError.message || "Failed to sign in.");
       }
 
       await fetchAuthToken(true);
 
       toast.add({
         type: "success",
-        title: `Welcome, ${role.toUpperCase()}!`,
-        description: `Successfully signed in as demo ${role}.`,
+        title: `Welcome, ${role.charAt(0).toUpperCase() + role.slice(1)}!`,
+        description: `Signed in successfully as ${role}.`,
       });
 
       router.push("/dashboard");
       router.refresh();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Demo login failed.";
+      const msg = err instanceof Error ? err.message : "Login failed.";
       setError(msg);
       toast.add({
         type: "error",
-        title: "Demo Login Failed",
+        title: "Login Failed",
         description: msg,
       });
     } finally {
-      setDemoLoading(null);
+      setQuickLoading(null);
     }
   };
 
@@ -163,7 +163,7 @@ export function LoginForm() {
 
         <Button
           type="submit"
-          disabled={loading || demoLoading !== null}
+          disabled={loading || quickLoading !== null}
           className="mt-1 flex items-center justify-center gap-2 h-11 text-base font-semibold bg-emerald-600 hover:bg-emerald-700 text-white"
         >
           {loading ? (
@@ -182,7 +182,7 @@ export function LoginForm() {
         type="button"
         variant="outline"
         onClick={handleGoogleSignIn}
-        disabled={loading || demoLoading !== null}
+        disabled={loading || quickLoading !== null}
         className="h-11 flex items-center justify-center gap-3 border-border hover:bg-muted font-medium text-sm"
       >
         <svg className="size-4.5" viewBox="0 0 24 24">
@@ -206,11 +206,11 @@ export function LoginForm() {
         Sign in with Google
       </Button>
 
-      {/* 1-Click Demo Access Section */}
+      {/* Quick 1-Click Access Section */}
       <div className="pt-2">
         <div className="flex items-center justify-between pb-2.5">
           <span className="text-[11px] font-bold tracking-wider text-muted-foreground uppercase">
-            DEMO ACCESS (1-CLICK)
+            QUICK ACCESS (1-CLICK)
           </span>
           <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
             Instant...
@@ -221,8 +221,8 @@ export function LoginForm() {
           {/* Admin Login Button */}
           <button
             type="button"
-            onClick={() => handleDemoLogin("admin")}
-            disabled={loading || demoLoading !== null}
+            onClick={() => handleQuickLogin("admin")}
+            disabled={loading || quickLoading !== null}
             className="flex items-center justify-between w-full p-3 rounded-xl border border-border bg-card hover:bg-muted/60 hover:border-primary/40 transition-colors text-left group"
           >
             <div className="flex items-center gap-3">
@@ -238,7 +238,7 @@ export function LoginForm() {
                 </span>
               </div>
             </div>
-            {demoLoading === "admin" ? (
+            {quickLoading === "admin" ? (
               <LoaderCircle className="size-4 animate-spin text-primary" />
             ) : (
               <ArrowRight className="size-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
@@ -248,8 +248,8 @@ export function LoginForm() {
           {/* Tutor Login Button */}
           <button
             type="button"
-            onClick={() => handleDemoLogin("tutor")}
-            disabled={loading || demoLoading !== null}
+            onClick={() => handleQuickLogin("tutor")}
+            disabled={loading || quickLoading !== null}
             className="flex items-center justify-between w-full p-3 rounded-xl border border-border bg-card hover:bg-muted/60 hover:border-primary/40 transition-colors text-left group"
           >
             <div className="flex items-center gap-3">
@@ -265,7 +265,7 @@ export function LoginForm() {
                 </span>
               </div>
             </div>
-            {demoLoading === "tutor" ? (
+            {quickLoading === "tutor" ? (
               <LoaderCircle className="size-4 animate-spin text-primary" />
             ) : (
               <ArrowRight className="size-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
@@ -275,8 +275,8 @@ export function LoginForm() {
           {/* Student Login Button */}
           <button
             type="button"
-            onClick={() => handleDemoLogin("student")}
-            disabled={loading || demoLoading !== null}
+            onClick={() => handleQuickLogin("student")}
+            disabled={loading || quickLoading !== null}
             className="flex items-center justify-between w-full p-3 rounded-xl border border-border bg-card hover:bg-muted/60 hover:border-primary/40 transition-colors text-left group"
           >
             <div className="flex items-center gap-3">
@@ -292,7 +292,7 @@ export function LoginForm() {
                 </span>
               </div>
             </div>
-            {demoLoading === "student" ? (
+            {quickLoading === "student" ? (
               <LoaderCircle className="size-4 animate-spin text-primary" />
             ) : (
               <ArrowRight className="size-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />

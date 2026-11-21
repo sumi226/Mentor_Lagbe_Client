@@ -16,7 +16,7 @@ type State =
  * Runs once on /payment/success when Stripe appended
  * ?session_id={CHECKOUT_SESSION_ID}: confirms the payment server-side,
  * records the transaction as paid and upgrades the account to Pro.
- * Renders nothing when there is no session id (e.g. demo navigation).
+ * Renders nothing when there is no session id (e.g. no active session).
  */
 export function PaymentVerifier() {
   const [state, setState] = useState<State>({ kind: "idle" });

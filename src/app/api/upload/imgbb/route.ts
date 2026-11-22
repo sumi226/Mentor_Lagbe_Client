@@ -14,26 +14,39 @@ export async function POST(req: Request) {
       process.env.NEXT_PUBLIC_IMGBB_API_KEY ||
       "87f61c390a3ea8cb6a2b85e0534be01c";
 
-    const imgbbForm = new FormData();
-    imgbbForm.append("image", file);
+    let imageUrl: string | null = null;
 
-    const res = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
-      method: "POST",
-      body: imgbbForm,
-    });
+    try {
+      const imgbbForm = new FormData();
+      imgbbForm.append("image", file);
 
-    const data = await res.json().catch(() => ({}));
+      const res = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+        method: "POST",
+        body: imgbbForm,
+      });
 
-    if (!res.ok || !data?.success) {
-      console.error("[imgbb] upload failed:", data);
-      return NextResponse.json(
-        { error: data?.error?.message ?? "ImgBB upload failed" },
-        { status: 502 }
-      );
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data?.success && (data?.data?.display_url || data?.data?.url)) {
+        imageUrl = data.data.display_url || data.data.url;
+      } else {
+        console.warn("[imgbb] API response failed, using graceful fallback:", data?.error?.message);
+      }
+    } catch (apiErr) {
+      console.warn("[imgbb] fetch error:", apiErr);
     }
 
-    const imageUrl = data?.data?.display_url || data?.data?.url;
-    return NextResponse.json({ url: imageUrl });
+    // If ImgBB returned a valid hosted URL, return it
+    if (imageUrl) {
+      return NextResponse.json({ url: imageUrl, source: "imgbb" });
+    }
+
+    // Graceful fallback to data URI so direct file upload never fails or breaks for the user
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const mimeType = (file as File).type || "image/jpeg";
+    const dataUri = `data:${mimeType};base64,${buffer.toString("base64")}`;
+
+    return NextResponse.json({ url: dataUri, source: "fallback" });
   } catch (error) {
     console.error("[imgbb] error:", error);
     return NextResponse.json({ error: "Failed to upload image" }, { status: 500 });

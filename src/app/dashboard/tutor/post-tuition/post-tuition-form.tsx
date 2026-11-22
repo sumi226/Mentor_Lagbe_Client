@@ -200,10 +200,11 @@ export function PostTuitionForm({ isPro, postsUsed, freeLimit }: PostTuitionForm
 
         <div className="grid gap-1.5 sm:col-span-2">
           <ImageUploader
-            label="Banner Image (uploaded via ImgBB API)"
+            label="Banner Image (Direct Upload via ImgBB API)"
             value={bannerImage}
             onChange={setBannerImage}
-            hint="Upload a banner photo from your computer via ImgBB, or enter a direct image URL."
+            hint="Upload a tuition banner photo directly from your device via ImgBB API."
+            disabled={limitReached}
           />
         </div>
 

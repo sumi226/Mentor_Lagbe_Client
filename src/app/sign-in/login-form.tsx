@@ -9,7 +9,37 @@ import { toast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowRight, LoaderCircle, Shield, GraduationCap, School } from "lucide-react";
+import { ArrowRight, LoaderCircle, Shield, GraduationCap, School, KeyRound, LogIn, Check, Copy } from "lucide-react";
+
+const QUICK_ROLES = [
+  {
+    role: "admin" as const,
+    label: "Admin",
+    email: "admin@mentorlagbe.com",
+    pass: "MentorLagbe123!",
+    icon: Shield,
+    colorClass: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
+    borderClass: "hover:border-rose-500/40",
+  },
+  {
+    role: "tutor" as const,
+    label: "Tutor",
+    email: "tutor@mentorlagbe.com",
+    pass: "MentorLagbe123!",
+    icon: GraduationCap,
+    colorClass: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    borderClass: "hover:border-emerald-500/40",
+  },
+  {
+    role: "student" as const,
+    label: "Student",
+    email: "student@mentorlagbe.com",
+    pass: "MentorLagbe123!",
+    icon: School,
+    colorClass: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+    borderClass: "hover:border-blue-500/40",
+  },
+];
 
 export function LoginForm() {
   const router = useRouter();
@@ -66,8 +96,32 @@ export function LoginForm() {
       description: "You are signed in.",
     });
 
-    // Hard navigate so browser sends all newly set session cookies cleanly to server
-    window.location.href = "/dashboard";
+    // Navigate cleanly with fresh cookies
+    const lowerEmail = email.trim().toLowerCase();
+    if (lowerEmail === "admin@mentorlagbe.com") {
+      window.location.href = "/dashboard/admin";
+    } else if (lowerEmail === "tutor@mentorlagbe.com") {
+      window.location.href = "/dashboard/tutor";
+    } else if (lowerEmail === "student@mentorlagbe.com") {
+      window.location.href = "/dashboard/student";
+    } else {
+      window.location.href = "/dashboard";
+    }
+  };
+
+  const handleFillCredentials = (
+    targetEmail: string,
+    targetPass: string,
+    roleLabel: string
+  ) => {
+    setEmail(targetEmail);
+    setPassword(targetPass);
+    setError(null);
+    toast.add({
+      type: "success",
+      title: `${roleLabel} credentials added!`,
+      description: "Email & password filled into form. Click 'Sign In' or '1-Click'.",
+    });
   };
 
   const handleQuickLogin = async (role: "admin" | "tutor" | "student") => {
@@ -77,6 +131,7 @@ export function LoginForm() {
     const targetEmail = `${role}@mentorlagbe.com`;
     const defaultPass = "MentorLagbe123!";
 
+    // Automatically fill the form inputs
     setEmail(targetEmail);
     setPassword(defaultPass);
 
@@ -97,6 +152,9 @@ export function LoginForm() {
         const prepData = await prepRes.json().catch(() => ({}));
         const loginEmail = prepData.email || targetEmail;
         const loginPass = prepData.password || defaultPass;
+
+        setEmail(loginEmail);
+        setPassword(loginPass);
 
         signInResult = await authClient.signIn.email({
           email: loginEmail,
@@ -221,96 +279,106 @@ export function LoginForm() {
 
       {/* Quick 1-Click Access Section */}
       <div className="pt-2">
-        <div className="flex items-center justify-between pb-2.5">
+        <div className="flex items-center justify-between pb-1.5">
           <span className="text-[11px] font-bold tracking-wider text-muted-foreground uppercase">
-            QUICK ACCESS (1-CLICK)
+            QUICK ACCESS (1-CLICK & AUTO-FILL)
           </span>
           <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-            Instant...
+            Instant Demo Access
           </span>
         </div>
 
-        <div className="flex flex-col gap-2">
-          {/* Admin Login Button */}
-          <button
-            type="button"
-            onClick={() => handleQuickLogin("admin")}
-            disabled={loading || quickLoading !== null}
-            className="flex items-center justify-between w-full p-3 rounded-xl border border-border bg-card hover:bg-muted/60 hover:border-primary/40 transition-colors text-left group"
-          >
-            <div className="flex items-center gap-3">
-              <div className="size-8 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
-                <Shield className="size-4" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
-                  Admin Login
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  admin@mentorlagbe.com
-                </span>
-              </div>
-            </div>
-            {quickLoading === "admin" ? (
-              <LoaderCircle className="size-4 animate-spin text-primary" />
-            ) : (
-              <ArrowRight className="size-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
-            )}
-          </button>
+        <p className="text-xs text-muted-foreground pb-2">
+          Click <strong>Auto-fill</strong> to add email & password to the form, or <strong>1-Click</strong> to sign in directly.
+        </p>
 
-          {/* Tutor Login Button */}
-          <button
-            type="button"
-            onClick={() => handleQuickLogin("tutor")}
-            disabled={loading || quickLoading !== null}
-            className="flex items-center justify-between w-full p-3 rounded-xl border border-border bg-card hover:bg-muted/60 hover:border-primary/40 transition-colors text-left group"
-          >
-            <div className="flex items-center gap-3">
-              <div className="size-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                <GraduationCap className="size-4" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
-                  Tutor Login
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  tutor@mentorlagbe.com
-                </span>
-              </div>
-            </div>
-            {quickLoading === "tutor" ? (
-              <LoaderCircle className="size-4 animate-spin text-primary" />
-            ) : (
-              <ArrowRight className="size-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
-            )}
-          </button>
+        <div className="flex flex-col gap-2.5">
+          {QUICK_ROLES.map((item) => {
+            const Icon = item.icon;
+            const isLoggingIn = quickLoading === item.role;
+            const isCurrentFilled = email === item.email;
 
-          {/* Student Login Button */}
-          <button
-            type="button"
-            onClick={() => handleQuickLogin("student")}
-            disabled={loading || quickLoading !== null}
-            className="flex items-center justify-between w-full p-3 rounded-xl border border-border bg-card hover:bg-muted/60 hover:border-primary/40 transition-colors text-left group"
-          >
-            <div className="flex items-center gap-3">
-              <div className="size-8 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-                <School className="size-4" />
+            return (
+              <div
+                key={item.role}
+                className={`p-3 rounded-xl border transition-all ${
+                  isCurrentFilled
+                    ? "border-primary bg-primary/5 shadow-sm"
+                    : "border-border bg-card hover:bg-muted/40 " + item.borderClass
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2.5">
+                  <div
+                    onClick={() => handleFillCredentials(item.email, item.pass, item.label)}
+                    className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer select-none"
+                    title="Click to fill email and password"
+                  >
+                    <div
+                      className={`size-9 rounded-lg ${item.colorClass} flex items-center justify-center shrink-0`}
+                    >
+                      <Icon className="size-4.5" />
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-semibold text-foreground">
+                          {item.label} Account
+                        </span>
+                        {isCurrentFilled ? (
+                          <span className="text-[10px] font-medium bg-primary/15 text-primary px-1.5 py-0.2 rounded-full">
+                            In Form
+                          </span>
+                        ) : null}
+                      </div>
+                      <span className="text-xs text-muted-foreground truncate font-mono">
+                        {item.email}
+                      </span>
+                      <div className="flex items-center gap-1 text-[11px] text-muted-foreground mt-0.5">
+                        <KeyRound className="size-3 text-muted-foreground shrink-0" />
+                        <span>Pass:</span>
+                        <code className="text-foreground bg-muted px-1 rounded font-mono text-[11px]">
+                          {item.pass}
+                        </code>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => handleFillCredentials(item.email, item.pass, item.label)}
+                      disabled={loading || quickLoading !== null}
+                      className="px-2.5 py-1.5 rounded-lg border border-border bg-background hover:bg-muted text-xs font-medium text-foreground transition-colors flex items-center gap-1 cursor-pointer"
+                      title="Add to form inputs"
+                    >
+                      <Copy className="size-3 text-muted-foreground" />
+                      Auto-fill
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleQuickLogin(item.role)}
+                      disabled={loading || quickLoading !== null}
+                      className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50"
+                      title="Sign in immediately"
+                    >
+                      {isLoggingIn ? (
+                        <>
+                          <LoaderCircle className="size-3 animate-spin" />
+                          <span>Wait...</span>
+                        </>
+                      ) : (
+                        <>
+                          <LogIn className="size-3" />
+                          <span>1-Click</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div className="flex flex-col">
-                <span className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
-                  Student Login
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  student@mentorlagbe.com
-                </span>
-              </div>
-            </div>
-            {quickLoading === "student" ? (
-              <LoaderCircle className="size-4 animate-spin text-primary" />
-            ) : (
-              <ArrowRight className="size-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
-            )}
-          </button>
+            );
+          })}
         </div>
       </div>
     </div>

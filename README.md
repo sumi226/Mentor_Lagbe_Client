@@ -107,7 +107,8 @@ dotenv Manages environment variables.
 
 stripe Handles server-side payment processing.
 
-@stripe/stripe-js Provides Stripe.js integration for frontend payment functionality.
+@stripe/stripe-js Provides Stripe.js integration for
+frontend payment functionality.
 
 next Next.js framework dependency listed in the
 server package.

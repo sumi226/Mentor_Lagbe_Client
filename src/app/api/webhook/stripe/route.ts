@@ -1,26 +1,20 @@
 import { NextResponse } from "next/server";
-import Stripe from "stripe";
+import { stripe } from "@/lib/stripe";
 import { client, db } from "@/lib/mongodb";
 import { PRO_PLANS, type PlanKey } from "@/lib/plans";
 
 export async function POST(req: Request) {
-  const stripeKey = process.env.STRIPE_SECRET_KEY;
-  if (!stripeKey) {
-    return NextResponse.json({ error: "Stripe key not configured" }, { status: 503 });
-  }
-
-  const stripe = new Stripe(stripeKey);
   const sig = req.headers.get("stripe-signature");
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-  let event: Stripe.Event;
+  let event: import("stripe").default.Event;
 
   try {
     const rawBody = await req.text();
     if (webhookSecret && sig) {
       event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
     } else {
-      event = JSON.parse(rawBody) as Stripe.Event;
+      event = JSON.parse(rawBody) as import("stripe").default.Event;
     }
   } catch (err) {
     console.error("[stripe-webhook] signature error:", err);
@@ -28,7 +22,7 @@ export async function POST(req: Request) {
   }
 
   if (event.type === "checkout.session.completed") {
-    const session = event.data.object as Stripe.Checkout.Session;
+    const session = event.data.object as import("stripe").default.Checkout.Session;
     if (session.payment_status === "paid") {
       const planKey: PlanKey =
         session.client_reference_id === "tutor" ||

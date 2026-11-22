@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
-import Stripe from "stripe";
-
+import { stripe, STRIPE_PRICE_IDS } from "@/lib/stripe";
 import { getAuthSession } from "@/lib/api-auth";
 import { PRO_PLANS, type PlanKey } from "@/lib/plans";
 
 /**
- * Creates a Stripe Checkout Session for a Pro subscription.
+ * Creates a Stripe Checkout Session for a Pro subscription (one-time payment mode).
  */
 export async function POST(req: Request) {
   try {
@@ -20,21 +19,7 @@ export async function POST(req: Request) {
     const body = await req.json().catch(() => ({} as Record<string, unknown>));
     const planKey: PlanKey = body.plan === "tutor" ? "tutor" : "student";
     const plan = PRO_PLANS[planKey];
-
-    const stripeKey = process.env.STRIPE_SECRET_KEY;
-    if (!stripeKey) {
-      return NextResponse.json(
-        {
-          error: "stripe-not-configured",
-          message:
-            "Stripe payments aren't configured yet — add STRIPE_SECRET_KEY to .env.local to enable subscriptions.",
-        },
-        { status: 503 }
-      );
-    }
-
-    const stripe = new Stripe(stripeKey);
-    const priceId = process.env[plan.priceIdEnv];
+    const priceId = STRIPE_PRICE_IDS[planKey] || process.env[plan.priceIdEnv];
 
     const origin =
       req.headers.get("origin") ??

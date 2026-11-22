@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import Stripe from "stripe";
-
+import { stripe } from "@/lib/stripe";
 import { getAuthSession } from "@/lib/api-auth";
 import { client, db } from "@/lib/mongodb";
 import { PRO_PLANS, type PlanKey } from "@/lib/plans";
@@ -9,7 +8,7 @@ import { PRO_PLANS, type PlanKey } from "@/lib/plans";
  * Confirms a Stripe Checkout Session after the buyer returns to
  * /payment/success. Per the spec this is where the payments record is
  * inserted (paymentStatus "paid", paidAt) and the user's plan is upgraded
- * to "pro". Falls back to 503 when Stripe isn't configured yet.
+ * to "pro".
  */
 export async function POST(req: Request) {
   try {
@@ -30,15 +29,6 @@ export async function POST(req: Request) {
       );
     }
 
-    const stripeKey = process.env.STRIPE_SECRET_KEY;
-    if (!stripeKey) {
-      return NextResponse.json(
-        { error: "stripe-not-configured", message: "Stripe payments aren't configured yet." },
-        { status: 503 }
-      );
-    }
-
-    const stripe = new Stripe(stripeKey);
     const checkout = await stripe.checkout.sessions.retrieve(sessionId);
 
     if (checkout.payment_status !== "paid") {

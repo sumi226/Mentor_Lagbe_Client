@@ -105,15 +105,14 @@ export function RegisterForm() {
     // Save registered user details in localStorage for instant Quick Access on sign-in
     try {
       if (typeof window !== "undefined") {
-        const customUser = {
-          id: `registered-${Date.now()}`,
-          role,
-          label: `${name.trim().split(" ")[0]} (${role.charAt(0).toUpperCase() + role.slice(1)})`,
+        const rawRoleUsers = localStorage.getItem("mentor_lagbe_role_users");
+        const roleUsers = rawRoleUsers ? JSON.parse(rawRoleUsers) : {};
+        roleUsers[role] = {
           email: email.trim(),
           pass: password,
-          isCustom: true,
+          role,
         };
-        localStorage.setItem("mentor_lagbe_custom_quick_user", JSON.stringify(customUser));
+        localStorage.setItem("mentor_lagbe_role_users", JSON.stringify(roleUsers));
       }
     } catch {}
 

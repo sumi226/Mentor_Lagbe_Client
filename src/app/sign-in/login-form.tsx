@@ -66,37 +66,46 @@ export function LoginForm() {
       description: "You are signed in.",
     });
 
-    router.push("/dashboard");
-    router.refresh();
+    // Hard navigate so browser sends all newly set session cookies cleanly to server
+    window.location.href = "/dashboard";
   };
 
   const handleQuickLogin = async (role: "admin" | "tutor" | "student") => {
     setQuickLoading(role);
     setError(null);
 
+    const targetEmail = `${role}@mentorlagbe.com`;
+    const defaultPass = "MentorLagbe123!";
+
+    setEmail(targetEmail);
+    setPassword(defaultPass);
+
     try {
-      // 1. Ensure account exists in DB with correct credentials
-      const prepRes = await fetch("/api/auth/quick-login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role }),
-      });
-      const prepData = await prepRes.json().catch(() => ({}));
-
-      const loginEmail = prepData.email || `${role}@mentorlagbe.com`;
-      const loginPass = prepData.password || "MentorLagbe123!";
-
-      setEmail(loginEmail);
-      setPassword(loginPass);
-
-      // 2. Perform 1-click sign-in via better-auth
-      const { error: signInError } = await authClient.signIn.email({
-        email: loginEmail,
-        password: loginPass,
+      // 1. Attempt direct 1-click sign in first for instant response
+      let signInResult = await authClient.signIn.email({
+        email: targetEmail,
+        password: defaultPass,
       });
 
-      if (signInError) {
-        throw new Error(signInError.message || "Failed to sign in.");
+      // 2. If direct login fails (e.g. account missing or needs resync), call quick-login endpoint and retry
+      if (signInResult.error) {
+        const prepRes = await fetch("/api/auth/quick-login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ role }),
+        });
+        const prepData = await prepRes.json().catch(() => ({}));
+        const loginEmail = prepData.email || targetEmail;
+        const loginPass = prepData.password || defaultPass;
+
+        signInResult = await authClient.signIn.email({
+          email: loginEmail,
+          password: loginPass,
+        });
+
+        if (signInResult.error) {
+          throw new Error(signInResult.error.message || "Failed to sign in.");
+        }
       }
 
       await fetchAuthToken(true);
@@ -107,8 +116,8 @@ export function LoginForm() {
         description: `Signed in successfully as ${role}.`,
       });
 
-      router.push("/dashboard");
-      router.refresh();
+      // Navigate directly to the role dashboard with a full reload to ensure server session cookies are active
+      window.location.href = `/dashboard/${role}`;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Login failed.";
       setError(msg);

@@ -33,10 +33,32 @@ export async function POST(req: Request) {
     const config = QUICK_USERS[role] ?? QUICK_USERS.student;
 
     await client.connect();
-    const existing = await db.collection("users").findOne({ email: config.email });
+    const user = await db.collection("users").findOne({ email: config.email });
+    let account = null;
 
-    if (!existing) {
-      // Create account via BetterAuth
+    if (user) {
+      account = await db.collection("accounts").findOne({
+        $or: [
+          { userId: user._id },
+          { userId: String(user._id) },
+          { accountId: config.email },
+        ],
+      });
+    }
+
+    // If user or password account record is missing, recreate cleanly via BetterAuth
+    if (!user || !account) {
+      if (user) {
+        await db.collection("users").deleteOne({ _id: user._id });
+        await db.collection("accounts").deleteMany({
+          $or: [
+            { userId: user._id },
+            { userId: String(user._id) },
+            { accountId: config.email },
+          ],
+        });
+      }
+
       try {
         await auth.api.signUpEmail({
           body: {
@@ -47,7 +69,7 @@ export async function POST(req: Request) {
           },
         });
       } catch (e) {
-        console.warn("[quick-login] account creation skipped (may already exist):", e);
+        console.warn("[quick-login] account creation skipped:", e);
       }
     }
 

@@ -66,10 +66,6 @@ export function RegisterForm() {
 
     setLoading(true);
 
-    try {
-      await authClient.signOut();
-    } catch {}
-
     const { error: signUpError } = await authClient.signUp.email({
       name: name.trim(),
       email: email.trim(),

@@ -73,37 +73,31 @@ export function LoginForm() {
 
       const loaded: Partial<Record<RoleType, SavedRoleUser>> = {};
 
-      // Load saved role users
+      // Load saved role users (only if valid pass exists)
       const rawRoleUsers = localStorage.getItem("mentor_lagbe_role_users");
       if (rawRoleUsers) {
-        Object.assign(loaded, JSON.parse(rawRoleUsers));
-      }
-
-      // Check legacy/single user keys from registration or previous login
-      const customReg = localStorage.getItem("mentor_lagbe_custom_quick_user");
-      if (customReg) {
-        const parsed = JSON.parse(customReg);
-        if (parsed && parsed.role && parsed.email) {
-          const r = parsed.role as RoleType;
-          if (["admin", "tutor", "student"].includes(r)) {
+        const parsed = JSON.parse(rawRoleUsers);
+        for (const r of ["admin", "tutor", "student"] as RoleType[]) {
+          if (parsed && parsed[r]?.email && parsed[r]?.pass && String(parsed[r].pass).length >= 6) {
             loaded[r] = {
-              email: parsed.email,
-              pass: parsed.pass || "",
+              email: parsed[r].email,
+              pass: parsed[r].pass,
               role: r,
             };
           }
         }
       }
 
-      const savedUser = localStorage.getItem("mentor_lagbe_saved_user");
-      if (savedUser) {
-        const parsed = JSON.parse(savedUser);
-        if (parsed && parsed.role && parsed.email) {
+      // Check legacy/single user keys from registration or previous login
+      const customReg = localStorage.getItem("mentor_lagbe_custom_quick_user");
+      if (customReg) {
+        const parsed = JSON.parse(customReg);
+        if (parsed && parsed.role && parsed.email && parsed.pass && String(parsed.pass).length >= 6) {
           const r = parsed.role as RoleType;
           if (["admin", "tutor", "student"].includes(r) && !loaded[r]) {
             loaded[r] = {
               email: parsed.email,
-              pass: parsed.pass || "",
+              pass: parsed.pass,
               role: r,
             };
           }
@@ -113,6 +107,50 @@ export function LoginForm() {
       setSavedUsers(loaded);
     } catch {}
   }, []);
+
+  const completeLogin = async (
+    serverRole: string | undefined | null,
+    loginEmail: string,
+    loginPass: string
+  ) => {
+    const lower = loginEmail.toLowerCase();
+    const finalRole: RoleType =
+      serverRole === "admin" || serverRole === "tutor" || serverRole === "student"
+        ? (serverRole as RoleType)
+        : lower.includes("admin")
+        ? "admin"
+        : lower.includes("tutor")
+        ? "tutor"
+        : "student";
+
+    // Remember user credentials under their role for seamless 1-click access
+    try {
+      if (typeof window !== "undefined") {
+        const rawRoleUsers = localStorage.getItem("mentor_lagbe_role_users");
+        const roleUsers = rawRoleUsers ? JSON.parse(rawRoleUsers) : {};
+        roleUsers[finalRole] = {
+          email: loginEmail,
+          pass: loginPass,
+          role: finalRole,
+        };
+        localStorage.setItem("mentor_lagbe_role_users", JSON.stringify(roleUsers));
+        setSavedUsers(roleUsers);
+      }
+    } catch {}
+
+    try {
+      await fetchAuthToken(true);
+    } catch {}
+
+    toast.add({
+      type: "success",
+      title: "Welcome back!",
+      description: "You are signed in.",
+    });
+
+    // Navigate cleanly with fresh cookies directly to the role dashboard
+    window.location.href = `/dashboard/${finalRole}`;
+  };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -132,17 +170,55 @@ export function LoginForm() {
     setLoading(true);
 
     try {
-      await authClient.signOut();
-    } catch {}
+      const signInResult = await authClient.signIn.email({
+        email: email.trim(),
+        password,
+      });
 
-    const { error: signInError } = await authClient.signIn.email({
-      email: email.trim(),
-      password,
-    });
+      if (signInResult.error) {
+        // If it's one of the default demo accounts, ensure it exists in DB and retry
+        const lower = email.trim().toLowerCase();
+        const isDefault = [
+          "admin@mentorlagbe.com",
+          "tutor@mentorlagbe.com",
+          "student@mentorlagbe.com",
+        ].includes(lower);
 
-    if (signInError) {
+        if (isDefault) {
+          const detectedRole: RoleType = lower.includes("admin")
+            ? "admin"
+            : lower.includes("tutor")
+            ? "tutor"
+            : "student";
+
+          await fetch("/api/auth/quick-login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ role: detectedRole }),
+          }).catch(() => null);
+
+          const retryResult = await authClient.signIn.email({
+            email: email.trim(),
+            password,
+          });
+
+          if (retryResult.error) {
+            throw new Error(retryResult.error.message || "Failed to sign in.");
+          }
+
+          await completeLogin(retryResult.data?.user?.role, email.trim(), password);
+          return;
+        }
+
+        throw new Error(
+          signInResult.error.message || "Invalid email or password. Please try again."
+        );
+      }
+
+      await completeLogin(signInResult.data?.user?.role, email.trim(), password);
+    } catch (err: unknown) {
       const message =
-        signInError.message ?? "Something went wrong. Please try again.";
+        err instanceof Error ? err.message : "Sign-in failed. Please try again.";
       setError(message);
       toast.add({
         type: "error",
@@ -150,58 +226,15 @@ export function LoginForm() {
         description: message,
       });
       setLoading(false);
-      return;
-    }
-
-    // Remember user credentials under their role for seamless 1-click access
-    try {
-      if (typeof window !== "undefined") {
-        const lower = email.trim().toLowerCase();
-        const detectedRole: RoleType = lower.includes("admin")
-          ? "admin"
-          : lower.includes("tutor")
-          ? "tutor"
-          : "student";
-
-        const updated = {
-          ...savedUsers,
-          [detectedRole]: {
-            email: email.trim(),
-            pass: password,
-            role: detectedRole,
-          },
-        };
-        setSavedUsers(updated);
-        localStorage.setItem("mentor_lagbe_role_users", JSON.stringify(updated));
-      }
-    } catch {}
-
-    await fetchAuthToken(true);
-
-    toast.add({
-      type: "success",
-      title: "Welcome back!",
-      description: "You are signed in.",
-    });
-
-    // Navigate cleanly with fresh cookies
-    const lowerEmail = email.trim().toLowerCase();
-    if (lowerEmail === "admin@mentorlagbe.com" || lowerEmail.includes("admin")) {
-      window.location.href = "/dashboard/admin";
-    } else if (lowerEmail === "tutor@mentorlagbe.com" || lowerEmail.includes("tutor")) {
-      window.location.href = "/dashboard/tutor";
-    } else if (lowerEmail === "student@mentorlagbe.com" || lowerEmail.includes("student")) {
-      window.location.href = "/dashboard/student";
-    } else {
-      window.location.href = "/dashboard";
     }
   };
 
   /**
    * User clicks on their specific role placeholder (Admin Login, Tutor Login, or Student Login).
    * - If user entered custom credentials in the form inputs, it uses their entered credentials.
-   * - If user previously registered/saved a user for that role, it uses that account.
+   * - If user previously registered/saved a user for that role with a password, it uses that account.
    * - Otherwise, it uses the default demo account for that role.
+   * - If sign in with custom/saved account fails, it automatically falls back to default demo account.
    */
   const handleRoleQuickLogin = async (role: RoleType) => {
     setQuickLoading(role);
@@ -210,45 +243,33 @@ export function LoginForm() {
     const config = DEFAULT_ACCOUNTS[role];
     const savedForRole = savedUsers[role];
 
-    const isCustomTypedEmail =
+    // Determine target credentials
+    let targetEmail = config.defaultEmail;
+    let targetPass = config.defaultPass;
+
+    const hasTypedCustomEmail =
       email.trim().length > 3 &&
       email.trim().includes("@") &&
       !["admin@mentorlagbe.com", "tutor@mentorlagbe.com", "student@mentorlagbe.com"].includes(
         email.trim().toLowerCase()
       );
 
-    let targetEmail = "";
-    let targetPass = "";
-
-    if (isCustomTypedEmail) {
+    if (hasTypedCustomEmail && password && password.length >= 6) {
       targetEmail = email.trim();
       targetPass = password;
-      if (!targetPass && savedForRole && savedForRole.email.toLowerCase() === targetEmail.toLowerCase()) {
-        targetPass = savedForRole.pass;
-      }
-    } else if (savedForRole && savedForRole.email) {
+    } else if (
+      savedForRole &&
+      savedForRole.email &&
+      savedForRole.pass &&
+      savedForRole.pass.length >= 6
+    ) {
       targetEmail = savedForRole.email;
       targetPass = savedForRole.pass;
-    } else {
-      targetEmail = config.defaultEmail;
-      targetPass = config.defaultPass;
     }
 
     // Automatically populate the input fields with the credentials being used
     setEmail(targetEmail);
-    if (targetPass) {
-      setPassword(targetPass);
-    }
-
-    if (!targetPass) {
-      setQuickLoading(null);
-      toast.add({
-        type: "info",
-        title: "Enter Password",
-        description: `Please enter the password for ${targetEmail} and click ${config.title}.`,
-      });
-      return;
-    }
+    setPassword(targetPass);
 
     try {
       // 1. Direct sign-in attempt
@@ -257,14 +278,21 @@ export function LoginForm() {
         password: targetPass,
       });
 
-      // 2. If it's a default account and failed, ensure account exists in DB and retry
-      const isDefaultAccount = [
-        "admin@mentorlagbe.com",
-        "tutor@mentorlagbe.com",
-        "student@mentorlagbe.com",
-      ].includes(targetEmail.toLowerCase());
+      // 2. If it failed and was a custom/saved account, fall back to default demo account
+      if (signInResult.error && targetEmail !== config.defaultEmail) {
+        targetEmail = config.defaultEmail;
+        targetPass = config.defaultPass;
+        setEmail(targetEmail);
+        setPassword(targetPass);
 
-      if (signInResult.error && isDefaultAccount) {
+        signInResult = await authClient.signIn.email({
+          email: targetEmail,
+          password: targetPass,
+        });
+      }
+
+      // 3. If it failed and is a default demo account, ensure account exists in DB and retry
+      if (signInResult.error) {
         const prepRes = await fetch("/api/auth/quick-login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -285,32 +313,36 @@ export function LoginForm() {
         if (signInResult.error) {
           throw new Error(signInResult.error.message || "Failed to sign in.");
         }
-      } else if (signInResult.error) {
-        throw new Error(signInResult.error.message || "Failed to sign in.");
       }
 
       // Save user under this role for future 1-click access
       try {
         if (typeof window !== "undefined") {
-          const updated = {
-            ...savedUsers,
-            [role]: { email: targetEmail, pass: targetPass, role },
+          const rawRoleUsers = localStorage.getItem("mentor_lagbe_role_users");
+          const roleUsers = rawRoleUsers ? JSON.parse(rawRoleUsers) : {};
+          roleUsers[role] = {
+            email: targetEmail,
+            pass: targetPass,
+            role,
           };
-          setSavedUsers(updated);
-          localStorage.setItem("mentor_lagbe_role_users", JSON.stringify(updated));
+          localStorage.setItem("mentor_lagbe_role_users", JSON.stringify(roleUsers));
+          setSavedUsers(roleUsers);
         }
       } catch {}
 
-      await fetchAuthToken(true);
+      try {
+        await fetchAuthToken(true);
+      } catch {}
 
       toast.add({
         type: "success",
         title: `Welcome, ${role.charAt(0).toUpperCase() + role.slice(1)}!`,
-        description: `Signed in successfully.`,
+        description: "Signed in successfully.",
       });
 
       // Navigate directly to the corresponding role dashboard
-      window.location.href = `/dashboard/${role}`;
+      const userRole = signInResult.data?.user?.role || role;
+      window.location.href = `/dashboard/${userRole}`;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Login failed.";
       setError(msg);

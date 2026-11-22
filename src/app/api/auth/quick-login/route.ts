@@ -58,8 +58,14 @@ export async function POST(req: Request) {
       });
     }
 
-    // If user or password account record is missing, recreate cleanly via BetterAuth
-    if (!user || !account) {
+    const isDefaultEmail = [
+      "admin@mentorlagbe.com",
+      "tutor@mentorlagbe.com",
+      "student@mentorlagbe.com",
+    ].includes(config.email.toLowerCase());
+
+    // If default account or password record is missing, recreate cleanly via BetterAuth
+    if ((!user || !account) && isDefaultEmail) {
       if (user) {
         await db.collection("users").deleteOne({ _id: user._id });
         await db.collection("accounts").deleteMany({

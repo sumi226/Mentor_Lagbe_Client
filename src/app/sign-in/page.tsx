@@ -15,7 +15,7 @@ export default async function SignInPage() {
   return (
     <AuthShell
       title="Welcome back"
-      subtitle="Sign in to your MentorLagbe account."
+      subtitle="Enter your credentials to access your tuition dashboard"
       className="max-w-md"
       imageSrc="/image/sign_in.jpg"
       imageAlt="A student wearing headphones taking notes beside a laptop"

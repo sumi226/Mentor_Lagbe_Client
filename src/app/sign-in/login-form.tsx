@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { fetchAuthToken } from "@/lib/api-token";
 import { validateSignIn } from "@/lib/auth-validation";
@@ -19,22 +19,28 @@ import {
   Eye,
   EyeOff,
   Zap,
+  User,
 } from "lucide-react";
 
-type RoleType = "admin" | "tutor" | "student";
+type RoleType = "admin" | "tutor" | "student" | "registered";
 
-const DEMO_ACCOUNTS: {
+interface QuickCardItem {
+  id: string;
   role: RoleType;
   title: string;
   email: string;
   pass: string;
-  icon: typeof Shield;
+  icon: typeof Shield | typeof User;
   iconColor: string;
   iconBg: string;
-}[] = [
+  isRegistered?: boolean;
+}
+
+const DEFAULT_ACCOUNTS: QuickCardItem[] = [
   {
+    id: "admin",
     role: "admin",
-    title: "Demo Admin Login",
+    title: "Admin Login",
     email: "admin@mentorlagbe.com",
     pass: "MentorLagbe123!",
     icon: Shield,
@@ -42,8 +48,9 @@ const DEMO_ACCOUNTS: {
     iconBg: "bg-rose-50 dark:bg-rose-950/40 border border-rose-200/60 dark:border-rose-900/40",
   },
   {
+    id: "tutor",
     role: "tutor",
-    title: "Demo Tutor Login",
+    title: "Tutor Login",
     email: "tutor@mentorlagbe.com",
     pass: "MentorLagbe123!",
     icon: GraduationCap,
@@ -51,8 +58,9 @@ const DEMO_ACCOUNTS: {
     iconBg: "bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-900/40",
   },
   {
+    id: "student",
     role: "student",
-    title: "Demo Student Login",
+    title: "Student Login",
     email: "student@mentorlagbe.com",
     pass: "MentorLagbe123!",
     icon: School,
@@ -67,7 +75,45 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [quickLoading, setQuickLoading] = useState<RoleType | null>(null);
+  const [quickLoading, setQuickLoading] = useState<string | null>(null);
+
+  // Saved registered user from localStorage
+  const [savedUser, setSavedUser] = useState<QuickCardItem | null>(null);
+
+  useEffect(() => {
+    try {
+      if (typeof window === "undefined") return;
+      // 1. Check custom quick user from signup
+      const fromSignup = localStorage.getItem("mentor_lagbe_custom_quick_user");
+      // 2. Check saved user from previous login
+      const fromLogin = localStorage.getItem("mentor_lagbe_saved_user");
+
+      const raw = fromSignup || fromLogin;
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (
+          parsed &&
+          parsed.email &&
+          !DEFAULT_ACCOUNTS.some(
+            (a) => a.email.toLowerCase() === parsed.email.toLowerCase()
+          )
+        ) {
+          setSavedUser({
+            id: "saved-registered",
+            role: parsed.role || "registered",
+            title: parsed.label || `${parsed.email.split("@")[0]} Login`,
+            email: parsed.email,
+            pass: parsed.pass || "",
+            icon: User,
+            iconColor: "text-indigo-600 dark:text-indigo-400",
+            iconBg:
+              "bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200/60 dark:border-indigo-900/40",
+            isRegistered: true,
+          });
+        }
+      }
+    } catch {}
+  }, []);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -108,6 +154,25 @@ export function LoginForm() {
       return;
     }
 
+    // Save user for future 1-Click Quick Access
+    try {
+      if (typeof window !== "undefined") {
+        const lower = email.trim().toLowerCase();
+        const detectedRole = lower.includes("admin")
+          ? "admin"
+          : lower.includes("tutor")
+          ? "tutor"
+          : "student";
+        const remembered = {
+          role: detectedRole,
+          label: `${email.trim().split("@")[0]} Login`,
+          email: email.trim(),
+          pass: password,
+        };
+        localStorage.setItem("mentor_lagbe_saved_user", JSON.stringify(remembered));
+      }
+    } catch {}
+
     await fetchAuthToken(true);
 
     toast.add({
@@ -129,13 +194,28 @@ export function LoginForm() {
     }
   };
 
-  const handleQuickLogin = async (role: RoleType, targetEmail: string, targetPass: string) => {
-    setQuickLoading(role);
+  const handleQuickLogin = async (item: QuickCardItem) => {
+    setQuickLoading(item.id);
     setError(null);
+
+    const targetEmail = item.email.trim();
+    const targetPass = item.pass;
 
     // Automatically fill the form inputs
     setEmail(targetEmail);
-    setPassword(targetPass);
+    if (targetPass) {
+      setPassword(targetPass);
+    }
+
+    if (!targetPass) {
+      setQuickLoading(null);
+      toast.add({
+        type: "info",
+        title: "Enter Password",
+        description: `Please enter password for ${targetEmail} and click Sign In.`,
+      });
+      return;
+    }
 
     try {
       // 1. Attempt direct 1-click sign in first
@@ -144,12 +224,12 @@ export function LoginForm() {
         password: targetPass,
       });
 
-      // 2. If direct login fails, invoke quick-login endpoint to ensure/recreate the demo account and retry
-      if (signInResult.error) {
+      // 2. If direct login fails and it's a demo account, ensure account exists in DB and retry
+      if (signInResult.error && !item.isRegistered) {
         const prepRes = await fetch("/api/auth/quick-login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ role }),
+          body: JSON.stringify({ role: item.role }),
         });
         const prepData = await prepRes.json().catch(() => ({}));
         const loginEmail = prepData.email || targetEmail;
@@ -166,18 +246,24 @@ export function LoginForm() {
         if (signInResult.error) {
           throw new Error(signInResult.error.message || "Failed to sign in.");
         }
+      } else if (signInResult.error) {
+        throw new Error(signInResult.error.message || "Failed to sign in.");
       }
 
       await fetchAuthToken(true);
 
       toast.add({
         type: "success",
-        title: `Welcome, ${role.charAt(0).toUpperCase() + role.slice(1)}!`,
-        description: `Signed in successfully.`,
+        title: `Welcome back!`,
+        description: `Signed in successfully as ${targetEmail}.`,
       });
 
       // Navigate directly to dashboard
-      window.location.href = `/dashboard/${role}`;
+      const destRole =
+        item.role === "admin" || item.role === "tutor" || item.role === "student"
+          ? item.role
+          : null;
+      window.location.href = destRole ? `/dashboard/${destRole}` : "/dashboard";
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Login failed.";
       setError(msg);
@@ -198,6 +284,37 @@ export function LoginForm() {
       description: "Google OAuth provider can be connected in .env.local via Google Cloud Console.",
     });
   };
+
+  // Compile list of Quick Access cards:
+  // Include saved registered user first if present, followed by Admin, Tutor, Student
+  const displayAccounts: QuickCardItem[] = [
+    ...(savedUser ? [savedUser] : []),
+    ...DEFAULT_ACCOUNTS,
+  ];
+
+  // If user has typed an email that is not in the list and not empty
+  const typedEmail = email.trim();
+  const isCustomTyped =
+    typedEmail.length > 3 &&
+    typedEmail.includes("@") &&
+    !displayAccounts.some(
+      (a) => a.email.toLowerCase() === typedEmail.toLowerCase()
+    );
+
+  const activeTypedCard: QuickCardItem | null = isCustomTyped
+    ? {
+        id: "active-typed",
+        role: "registered",
+        title: `Quick Login (${typedEmail.split("@")[0]})`,
+        email: typedEmail,
+        pass: password,
+        icon: User,
+        iconColor: "text-amber-600 dark:text-amber-400",
+        iconBg:
+          "bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-900/40",
+        isRegistered: true,
+      }
+    : null;
 
   return (
     <div className="flex flex-col gap-5">
@@ -306,28 +423,61 @@ export function LoginForm() {
         Sign in with Google
       </Button>
 
-      {/* Quick Demo Access (1-Click) Section */}
+      {/* Quick Access (1-Click) Section */}
       <div className="pt-2">
         <div className="flex items-center justify-between pb-2.5">
           <div className="flex items-center gap-1.5 text-[11px] font-bold tracking-wider text-muted-foreground uppercase">
             <Zap className="size-3.5 text-amber-500 fill-amber-500" />
-            <span>QUICK DEMO ACCESS (1-CLICK)</span>
+            <span>QUICK ACCESS (1-CLICK)</span>
           </div>
           <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-            Instant Test Login
+            Instant 1-Click Login
           </span>
         </div>
 
         <div className="flex flex-col gap-2.5">
-          {DEMO_ACCOUNTS.map((item) => {
+          {/* Active Typed User Card (if user typed their own email in the input) */}
+          {activeTypedCard && (
+            <button
+              type="button"
+              onClick={() => handleQuickLogin(activeTypedCard)}
+              disabled={loading || quickLoading !== null}
+              className="flex items-center justify-between w-full p-3 rounded-xl border border-amber-300/80 dark:border-amber-700/60 bg-amber-50/40 dark:bg-amber-950/20 hover:bg-amber-50/80 transition-all text-left group cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div
+                  className={`size-9 rounded-lg ${activeTypedCard.iconBg} ${activeTypedCard.iconColor} flex items-center justify-center shrink-0 shadow-2xs`}
+                >
+                  <User className="size-4.5" />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-sm font-semibold text-foreground group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                    {activeTypedCard.title}
+                  </span>
+                  <span className="text-xs text-muted-foreground truncate">
+                    {activeTypedCard.email}
+                  </span>
+                </div>
+              </div>
+
+              {quickLoading === activeTypedCard.id ? (
+                <LoaderCircle className="size-4 animate-spin text-amber-600 dark:text-amber-400 shrink-0" />
+              ) : (
+                <ArrowRight className="size-4 text-muted-foreground/70 group-hover:text-amber-600 dark:group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all shrink-0" />
+              )}
+            </button>
+          )}
+
+          {/* Regular Quick Access Cards */}
+          {displayAccounts.map((item) => {
             const Icon = item.icon;
-            const isLoggingIn = quickLoading === item.role;
+            const isLoggingIn = quickLoading === item.id;
 
             return (
               <button
-                key={item.role}
+                key={item.id}
                 type="button"
-                onClick={() => handleQuickLogin(item.role, item.email, item.pass)}
+                onClick={() => handleQuickLogin(item)}
                 disabled={loading || quickLoading !== null}
                 className="flex items-center justify-between w-full p-3 rounded-xl border border-border/80 bg-card hover:bg-muted/50 hover:border-emerald-500/40 transition-all text-left group cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
               >

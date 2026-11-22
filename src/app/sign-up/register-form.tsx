@@ -102,14 +102,29 @@ export function RegisterForm() {
     // API calls can send `Authorization: Bearer <jwt>` right away.
     await fetchAuthToken(true);
 
+    // Save registered user details in localStorage for instant Quick Access on sign-in
+    try {
+      if (typeof window !== "undefined") {
+        const customUser = {
+          id: `registered-${Date.now()}`,
+          role,
+          label: `${name.trim().split(" ")[0]} (${role.charAt(0).toUpperCase() + role.slice(1)})`,
+          email: email.trim(),
+          pass: password,
+          isCustom: true,
+        };
+        localStorage.setItem("mentor_lagbe_custom_quick_user", JSON.stringify(customUser));
+      }
+    } catch {}
+
     toast.add({
       type: "success",
       title: "Account created",
       description: `Welcome to MentorLagbe, ${name.trim().split(" ")[0]}!`,
     });
 
-    router.push("/dashboard");
-    router.refresh();
+    // Hard navigate so browser sends all newly set session cookies cleanly to server
+    window.location.href = role ? `/dashboard/${role}` : "/dashboard";
   };
 
   return (

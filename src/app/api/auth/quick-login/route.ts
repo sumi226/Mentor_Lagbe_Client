@@ -29,8 +29,20 @@ const QUICK_USERS = {
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
-    const role = (body.role ?? "student").toLowerCase() as keyof typeof QUICK_USERS;
-    const config = QUICK_USERS[role] ?? QUICK_USERS.student;
+    const roleKey = (body.role ?? "student").toLowerCase() as keyof typeof QUICK_USERS;
+    const defaultConfig = QUICK_USERS[roleKey] ?? QUICK_USERS.student;
+
+    const config = {
+      email: body.email ? String(body.email).trim() : defaultConfig.email,
+      name: body.name
+        ? String(body.name).trim()
+        : body.email
+        ? String(body.email).split("@")[0]
+        : defaultConfig.name,
+      password: body.password ? String(body.password) : defaultConfig.password,
+      role: body.role ? String(body.role).toLowerCase() : defaultConfig.role,
+      plan: (body.role ?? defaultConfig.role) === "admin" ? "pro" : "free",
+    };
 
     await client.connect();
     const user = await db.collection("users").findOne({ email: config.email });
